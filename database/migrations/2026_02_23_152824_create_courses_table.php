@@ -21,11 +21,11 @@ return new class extends Migration
             $table->integer('period');
             $table->integer('order');
             $table->string('type');
-            $table->integer('session');
+            $table->integer('session')->default(0);
             $table->integer('student')->default(0);
             $table->dateTime('schedule_at')->nullable();
             $table->longText('note');
-            $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Teacher::class)->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
 
