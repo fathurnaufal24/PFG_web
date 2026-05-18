@@ -17,22 +17,7 @@ return new class extends Migration
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
             $table->string('subject');
-            $table->integer('level');
-            $table->integer('period');
-            $table->integer('order');
-            $table->string('type');
-            $table->integer('session')->default(0);
-            $table->integer('student')->default(0);
-            $table->dateTime('schedule_at')->nullable();
-            $table->longText('note');
-            $table->foreignIdFor(Teacher::class)->nullable()->constrained()->cascadeOnDelete();
-            $table->timestamps();
-        });
-
-        Schema::create('course_student', function (Blueprint $table) { //enrollment
-            $table->id();
-            $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Student::class)->constrained()->cascadeOnDelete();
+            $table->longText('description')->nullable();
             $table->timestamps();
         });
     }

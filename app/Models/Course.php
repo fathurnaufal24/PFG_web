@@ -10,13 +10,9 @@ class Course extends Model
     /** @use HasFactory<\Database\Factories\CourseFactory> */
     use HasFactory;
 
-    protected $guarded = [''];
+    protected $fillable = ['subject'];
 
-    public function teacher() {
-        return $this->belongsTo(Teacher::class);
-    }
-
-    public function student() {
-        return $this->belongsToMany(Student::class);
+    public function available_course() {
+        return $this->hasMany(AvailableCourse::class);
     }
 }

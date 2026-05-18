@@ -26,7 +26,7 @@ class Teacher extends Model
     }
 
     public function course() {
-        return $this->hasMany(Course::class);
+        return $this->hasMany(AvailableCourse::class);
     }
 
     public function mood_trackers()
