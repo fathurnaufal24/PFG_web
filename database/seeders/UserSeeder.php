@@ -53,7 +53,6 @@ class UserSeeder extends Seeder
         ]);
         $teacher1->teacher->course()->create([
             'course_id' => $course1->id,
-            'subject' => 'STEM',
             'level' => 1,
             'period' => 1,
             'order' => 1,
@@ -75,7 +74,6 @@ class UserSeeder extends Seeder
         ]);
         $teacher2->teacher->course()->create([
             'course_id' => $course2->id,
-            'subject' => 'IF',
             'level' => 1,
             'period' => 3,
             'order' => 3,
@@ -98,7 +96,6 @@ class UserSeeder extends Seeder
         ]);
         $teacher3->teacher->course()->create([
             'course_id' => $course3->id,
-            'subject' => 'STEM-C',
             'level' => 1,
             'period' => 1,
             'order' => 2,
