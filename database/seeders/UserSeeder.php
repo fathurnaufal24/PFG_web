@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Course;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -24,6 +25,20 @@ class UserSeeder extends Seeder
             'name' => $admin->name,
         ]);
 
+        //Course
+        $course1 = Course::create([
+            'subject' => 'STEM',
+            'description' => 'STEM Creativity'
+        ]);
+        $course2 = Course::create([
+            'subject' => 'IF',
+            'description' => 'Islamic Finance'
+        ]);
+        $course3 = Course::create([
+            'subject' => 'ILC',
+            'description' => 'Islamic Leadership and Collaborration'
+        ]);
+
 
         // Teacher 1
         $teacher1 = User::create([
@@ -37,7 +52,8 @@ class UserSeeder extends Seeder
             'card_number' => '1234567890'
         ]);
         $teacher1->teacher->course()->create([
-            'subject' => 'QV',
+            'course_id' => $course1->id,
+            'subject' => 'STEM',
             'level' => 1,
             'period' => 1,
             'order' => 1,
@@ -58,6 +74,7 @@ class UserSeeder extends Seeder
             'card_number' => '2345678901'
         ]);
         $teacher2->teacher->course()->create([
+            'course_id' => $course2->id,
             'subject' => 'IF',
             'level' => 1,
             'period' => 3,
@@ -80,6 +97,7 @@ class UserSeeder extends Seeder
             'card_number' => '1234567890'
         ]);
         $teacher3->teacher->course()->create([
+            'course_id' => $course3->id,
             'subject' => 'STEM-C',
             'level' => 1,
             'period' => 1,
