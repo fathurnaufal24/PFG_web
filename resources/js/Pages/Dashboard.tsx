@@ -1,6 +1,5 @@
 import React from 'react';
 import { Star, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-// import teacherIllustration from './icon-guru.png';
 
 const Dashboard = () => {
   return (
