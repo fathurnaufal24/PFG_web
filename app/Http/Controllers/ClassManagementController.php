@@ -15,7 +15,7 @@ class ClassManagementController extends Controller
         // else {
         //     $course = $user->teacher->course;
         // }
-        return Inertia::render('Course/CourseDashboard', [
+        return Inertia::render('ClassManagement/Index', [
             // 'canCreate' => auth()->user()->can('create', Course::class),
             // 'courses' => $course,
             // 'canCreate' => $user->role === 'admin'

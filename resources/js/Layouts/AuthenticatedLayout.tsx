@@ -2,9 +2,9 @@ import Sidebar from "@/Components/Sidebar";
 import { Menu } from "lucide-react";
 import { ReactNode, useState } from "react";
 
-export default function AuthenticatedLayout({ children }: { children: ReactNode }) {
+export default function AuthenticatedLayout({ children, className }: { children: ReactNode, className?: string; }) {
     const [isOpen, setIsOpen] = useState(false);
-    return <div id="divutama_authlayout" className="flex min-h-screen bg-[#F3F4F9]">
+    return <div id="divutama_authlayout" className={`flex min-h-screen bg-[#F3F4F9] ${className}`}>
         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
         <div id="divpertama_authlayout" className="flex-1 flex flex-col min-w-0 overflow-hidden">

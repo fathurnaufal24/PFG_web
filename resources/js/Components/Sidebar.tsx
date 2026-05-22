@@ -11,7 +11,7 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
 
   const menus = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "dashboard" },
-    { name: "Class Management", icon: <Users size={20} />, path: "course" },
+    { name: "Class Management", icon: <Users size={20} />, path: "classmanagement" },
     { name: "Revenue", icon: <Wallet size={20} />, path: "revenue" },
     { name: "My Schedule", icon: <Calendar size={20} />, path: "schedule" },
     { name: "Module", icon: <BookOpen size={20} />, path: "module" },
