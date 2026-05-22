@@ -15,7 +15,7 @@ export default function WelcomeLayout({ auth, children }: PageProps<{ children?:
                 {/* Area Logo (Kosong di desain, tapi disiapkan ruangnya) */}
                 <div className="w-32">
                     <img
-                        src="/images/PFGLogoWithTExthD.png"
+                        src="/images/PFGLogoWIthTextHD.png"
                         alt="Gambar Utama"
                         className="w-full object-cover mt-16"
                     />

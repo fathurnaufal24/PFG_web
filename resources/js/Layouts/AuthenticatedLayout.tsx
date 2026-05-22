@@ -1,62 +1,28 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
-import { Head } from '@inertiajs/react';
-import { IoMenuSharp, IoNotificationsSharp } from "react-icons/io5";
-import { FaUser } from "react-icons/fa";
+import Sidebar from "@/Components/Sidebar";
+import { Menu } from "lucide-react";
+import { ReactNode, useState } from "react";
 
-export default function AuthenticatedLayout({
-    className = '',
-    children,
-}: PropsWithChildren<{className?: string}>) {
-    const user = usePage().props.auth.user;
-    useEffect(() => {
-        console.log((user.role === 'admin') && user.curriculum);
-    }, []);
-    const name = (user.role === 'teacher')? user.teacher.first_name : (user.role === 'admin')? user.curriculum.name : user.student.name;
+export default function AuthenticatedLayout({ children }: { children: ReactNode }) {
+    const [isOpen, setIsOpen] = useState(false);
+    return <div id="divutama_authlayout" className="flex min-h-screen bg-[#F3F4F9]">
+        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
-
-    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
-    const [profileDropdown, setProfileDropdown] = useState(false);
-
-    return <main className='min-h-screen bg-slate-200'>
-        <Head>
-            <title>Dashboard</title>
-        </Head>
-        <nav className='p-3 flex justify-between items-center bg-blue-400 relative'>
-            <div className={`absolute top-16 bg-white ${showingNavigationDropdown? 'block' : 'hidden'}`}>
-                <section className='flex flex-col'>
-                    <NavLink href={route('dashboard')} active={route().current('dashboard')}>Dashboard</NavLink>
-                    <NavLink href={route('course')} active={route().current('course')}>Class Management</NavLink>
-                    <NavLink href={route('revenue')} active={route().current('revenue')}>Revenue</NavLink>
-                    <NavLink href={route('schedule')} active={route().current('schedule')}>My Schedule</NavLink>
-                    <NavLink href={route('module')} active={route().current('module')}>Module</NavLink>
-                    <NavLink href={route('classoffering')} active={route().current('classoffering')}>Class Offering</NavLink>
-                </section>
-            </div>
-            {
-                profileDropdown &&
-                <div className={`absolute top-16 right-0 bg-white`}>
-                <section className='flex flex-col'>
-                    <Link className='p-5' href={route('profile.edit')}>Edit Profile</Link>
-                    <Link className='p-5' href={route('logout')} method='post'>Logout</Link>
-                </section>
-            </div>
-            }
-            <div className='flex items-center'>
-                <IoMenuSharp size={32} className='cursor-pointer' onClick={() => setShowingNavigationDropdown((e) => !e)} />
-                <IoNotificationsSharp size={32} />
-            </div>
-            <div className='flex items-center cursor-pointer' onClick={() => setProfileDropdown(e => !e)}>
-                <p>Welcome, {name}</p>
-                <FaUser size={32}/>
-            </div>
-        </nav>
-        <div className={`flex p-5 justify-center items-center ` + className}>
-            {children}
+        <div id="divpertama_authlayout" className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header className="md:hidden bg-[#1E293B] p-4 shadow-sm flex items-center justify-between sticky top-0 z-30">
+                <div className="flex items-center space-x-2">
+                    <img src='/images/logo-sidebar.png' alt="PFG Logo" className="w-8 h-8 object-contain" />
+                    <span className="font-bold text-white">PFG Portal</span>
+                </div>
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="p-2 text-white hover:bg-gray-100 rounded-lg"
+                >
+                    <Menu size={24} />
+                </button>
+            </header>
+            <main className="flex-1 overflow-x-hidden overflow-y-auto">
+                {children}
+            </main>
         </div>
-    </main>;
+    </div>
 }

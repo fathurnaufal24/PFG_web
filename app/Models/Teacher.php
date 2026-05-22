@@ -25,8 +25,8 @@ class Teacher extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function course() {
-        return $this->hasMany(AvailableCourse::class);
+    public function class_management() {
+        return $this->hasMany(ClassManagement::class);
     }
 
     public function mood_trackers()

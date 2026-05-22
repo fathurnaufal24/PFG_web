@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ClassManagementController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RevenueController;
+use App\Models\ClassManagement;
 use App\Models\Teacher;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -38,9 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/course', [CourseController::class, 'index'])->name('course');
-    Route::get('/course/{course}', [CourseController::class, 'show'])->name('course.show');
-    Route::post('/course', [CourseController::class, 'store'])->name('course.store');
+    Route::get('/classmanagement', [ClassManagementController::class, 'index'])->name('classmanagement');
+    Route::get('/classmanagement/{classmanagement}', [ClassManagementController::class, 'show'])->name('classmanagement.show');
+    Route::post('/classmanagement', [ClassManagementController::class, 'store'])->name('classmanagement.store');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/schedule', function() {
         return Inertia::render('Schedule/ScheduleIndex');
@@ -49,6 +51,8 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Module/ModuleIndex');
     })->name('module');
     Route::get('/classoffering')->name('classoffering');
+    Route::get('/notifications')->name('notifications');
+    Route::get('/parentmeeting')->name('parentmeeting');
 });
 
 require __DIR__.'/auth.php';
