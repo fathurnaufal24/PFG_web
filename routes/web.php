@@ -3,9 +3,13 @@
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ClassManagementController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ParentMeetingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RevenueController;
 use App\Models\ClassManagement;
+use App\Models\ClassOffering;
 use App\Models\Teacher;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -45,14 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/classmanagement', [ClassManagementController::class, 'store'])->name('classmanagement.store');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/schedule', function() {
-        return Inertia::render('Schedule/ScheduleIndex');
+        return Inertia::render('Schedule/Index');
     })->name('schedule');
-    Route::get('/module', function() {
-        return Inertia::render('Module/ModuleIndex');
-    })->name('module');
-    Route::get('/classoffering')->name('classoffering');
-    Route::get('/notifications')->name('notifications');
-    Route::get('/parentmeeting')->name('parentmeeting');
+    Route::get('/module', [ModuleController::class, 'index'])->name('module');
+    Route::get('/classoffering', [ClassOffering::class, 'index'])->name('classoffering');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::get('/parentmeeting', [ParentMeetingController::class, 'index'])->name('parentmeeting');
 });
 
 require __DIR__.'/auth.php';
