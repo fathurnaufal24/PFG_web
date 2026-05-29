@@ -67,12 +67,12 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
           ))}
         </nav>
 
-        <div
-        className="pt-10 flex items-center space-x-3 p-3 text-red-500 font-bold cursor-pointer hover:bg-red-50 rounded-xl transition"
+        <Link href='/logout' method='post'
+        className="pt-10 flex items-center space-x-3 p-3 text-red-500 font-bold cursor-pointer hover:bg-red-50 rounded-xl transition" as="button"
       >
           <LogOut size={20} />
           <span className="text-sm">Logout</span>
-        </div>
+        </Link>
       </div>
     </>
   );
