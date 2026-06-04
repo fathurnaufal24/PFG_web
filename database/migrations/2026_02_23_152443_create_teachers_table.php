@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('bachelor')->nullable();
             $table->string('master')->nullable();
             $table->string('doctoral')->nullable();
+            $table->decimal('performance');
             $table->timestamps();
         });
     }

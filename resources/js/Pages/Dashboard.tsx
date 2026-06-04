@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Star, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { TeacherProps } from '@/types';
 
-const Dashboard = () => {
+const Dashboard = ({teacherData}: {teacherData: TeacherProps}) => {
     return (
         <AuthenticatedLayout>
             <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
@@ -18,10 +19,10 @@ const Dashboard = () => {
                         </div>
 
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome Fathurrahman Naufal, M.kom.</h1>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome {teacherData.first_name}</h1>
                             <p className="text-gray-600 leading-relaxed mb-4">
                                 Remember to begin your day with Bismillah. Also, your performance score has now
-                                reached <span className="bg-red-500 text-white px-2 py-0.5 rounded-md font-bold">61.19%</span> out of the 75% standard.
+                                reached <span className="bg-red-500 text-white px-2 py-0.5 rounded-md font-bold">{teacherData.performance}%</span> out of the 75% standard.
                                 Feel free to share this with the Super Teacher or the Curriculum Team. Insya Allah, it will become green!
                                 May your study session go well, keep the spirit high!
                             </p>
@@ -35,7 +36,7 @@ const Dashboard = () => {
                     <div className="w-full lg:w-72 bg-white p-6 rounded-3xl shadow-sm">
                         <h3 className="font-bold text-gray-700 mb-4 text-center">Teacher Performance</h3>
                         <div className="bg-red-500 text-white text-center py-2 rounded-lg font-bold text-xl mb-4">
-                            61.19 %
+                            {teacherData.performance} %
                         </div>
 
                         <div className="space-y-2 mb-6 text-sm font-medium">

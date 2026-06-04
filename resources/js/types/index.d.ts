@@ -49,6 +49,7 @@ export interface TeacherProps {
     bachelor: string | null;
     master: string | null;
     doctoral: string | null;
+    performance: number;
     created_at: string;
     updated_at: string;
 }

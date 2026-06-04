@@ -49,9 +49,10 @@ class UserSeeder extends Seeder
         ]);
         $teacher1->teacher()->create([
             'first_name' => $teacher1->name,
-            'card_number' => '1234567890'
+            'card_number' => '1234567890',
+            'performance' => 67.67
         ]);
-        $teacher1->teacher->course()->create([
+        $teacher1->teacher->class_management()->create([
             'course_id' => $course1->id,
             'level' => 1,
             'period' => 1,
@@ -70,9 +71,10 @@ class UserSeeder extends Seeder
         ]);
         $teacher2->teacher()->create([
             'first_name' => $teacher2->name,
-            'card_number' => '2345678901'
+            'card_number' => '2345678901',
+            'performance' => 67.67
         ]);
-        $teacher2->teacher->course()->create([
+        $teacher2->teacher->class_management()->create([
             'course_id' => $course2->id,
             'level' => 1,
             'period' => 3,
@@ -92,9 +94,10 @@ class UserSeeder extends Seeder
         ]);
         $teacher3->teacher()->create([
             'first_name' => $teacher3->name,
-            'card_number' => '1234567890'
+            'card_number' => '1234567890',
+            'performance' => 67.67
         ]);
-        $teacher3->teacher->course()->create([
+        $teacher3->teacher->class_management()->create([
             'course_id' => $course3->id,
             'level' => 1,
             'period' => 1,

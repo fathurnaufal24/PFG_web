@@ -18,6 +18,7 @@ class Teacher extends Model
         'dob',
         'domicile',
         'card_number',
+        'performance'
     ];
 
     public function user()
