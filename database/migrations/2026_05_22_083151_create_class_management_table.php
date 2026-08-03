@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('student')->default(0);
             $table->dateTime('schedule_at')->nullable();
             $table->longText('note');
-            $table->string('status')->default('inactive');
+            $table->string('status')->default('inactive'); // ['inactive', 'active', 'report', 'pm', 'ended']
             $table->timestamps();
         });
     }

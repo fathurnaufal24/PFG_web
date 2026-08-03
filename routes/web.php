@@ -44,10 +44,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/classmanagement', [ClassManagementController::class, 'index'])->name('classmanagement');
+    Route::get('/classmanagement/create', [ClassManagementController::class, 'create'])->name('classmanagement.create');
     Route::get('/classmanagement/{classmanagement}', [ClassManagementController::class, 'show'])->name('classmanagement.show');
+    Route::get('/classmanagement/{classmanagement}/edit', [ClassManagementController::class, 'edit'])->name('classmanagement.edit');
     Route::post('/classmanagement', [ClassManagementController::class, 'store'])->name('classmanagement.store');
+    Route::put('/classmanagement/{classmanagement}', [ClassManagementController::class, 'update'])->name('classmanagement.update');
+    Route::delete('/classmanagement/{classmanagement}', [ClassManagementController::class, 'destroy'])->name('classmanagement.destroy');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
-    Route::get('/schedule', function() {
+    Route::get('/schedule', function () {
         return Inertia::render('Schedule/Index');
     })->name('schedule');
     Route::get('/module', [ModuleController::class, 'index'])->name('module');
@@ -56,4 +60,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/parentmeeting', [ParentMeetingController::class, 'index'])->name('parentmeeting');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

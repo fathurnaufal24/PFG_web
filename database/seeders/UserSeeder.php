@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Course;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,7 +21,7 @@ class UserSeeder extends Seeder
             'role' => 'admin'
         ]);
         $admin->curriculum()->create([
-            'name' => $admin->name,
+            'first_name' => $admin->name,
         ]);
 
         //Course
@@ -59,7 +58,9 @@ class UserSeeder extends Seeder
             'order' => 1,
             'type' => 'trial',
             'session' => 0,
-            'note' => 'lorem ipsum dolor sit amet'
+            'schedule_at' => now()->addDays(5), // TAMBAHKAN INI
+            'note' => 'lorem ipsum dolor sit amet',
+            'status' => 'inactive' // TAMBAHKAN STATUS
         ]);
 
         // Teacher 2
@@ -81,7 +82,9 @@ class UserSeeder extends Seeder
             'order' => 3,
             'type' => 'trial',
             'session' => 0,
-            'note' => 'lorem ipsum dolor sit amet'
+            'schedule_at' => now()->addDays(3), // TAMBAHKAN INI
+            'note' => 'lorem ipsum dolor sit amet',
+            'status' => 'active' // TAMBAHKAN STATUS
         ]);
 
 
@@ -104,7 +107,9 @@ class UserSeeder extends Seeder
             'order' => 2,
             'type' => 'trial',
             'session' => 0,
-            'note' => 'lorem ipsum dolor sit amet'
+            'schedule_at' => now()->addDays(7), // TAMBAHKAN INI
+            'note' => 'lorem ipsum dolor sit amet',
+            'status' => 'report' // TAMBAHKAN STATUS
         ]);
     }
 }

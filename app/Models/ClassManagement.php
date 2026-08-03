@@ -11,6 +11,9 @@ class ClassManagement extends Model
     use HasFactory;
 
     protected $guarded = [''];
+    protected $casts = [
+        'schedule_at' => 'datetime',
+    ];
 
     public function course() {
         return $this->belongsTo(Course::class);
