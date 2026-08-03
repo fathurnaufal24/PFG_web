@@ -3,7 +3,63 @@ import { Star, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { TeacherProps } from '@/types';
 
-const Dashboard = ({teacherData}: {teacherData: TeacherProps}) => {
+interface DashboardProps {
+    teacherData: TeacherProps | null;
+    isAdmin: boolean;
+    userRole: string;
+    userName: string;
+}
+
+const Dashboard = ({ teacherData, isAdmin, userRole, userName }: DashboardProps) => {
+    // Jika admin, tampilkan dashboard admin
+    if (isAdmin || userRole === 'admin') {
+        return (
+            <AuthenticatedLayout>
+                <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
+                    {/* Admin Dashboard */}
+                    <div className="bg-white p-8 rounded-3xl shadow-sm mb-6">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                            Welcome, {userName} 👋
+                        </h1>
+                        <p className="text-gray-600 text-lg">
+                            This is the Admin Dashboard. You have full access to manage classes, teachers, and courses.
+                        </p>
+                    </div>
+
+                    {/* Admin Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-sm">
+                            <h3 className="text-gray-500 text-sm font-medium">Total Classes</h3>
+                            <p className="text-3xl font-bold text-gray-800 mt-2">0</p>
+                        </div>
+                        <div className="bg-white p-6 rounded-3xl shadow-sm">
+                            <h3 className="text-gray-500 text-sm font-medium">Total Teachers</h3>
+                            <p className="text-3xl font-bold text-gray-800 mt-2">0</p>
+                        </div>
+                        <div className="bg-white p-6 rounded-3xl shadow-sm">
+                            <h3 className="text-gray-500 text-sm font-medium">Total Students</h3>
+                            <p className="text-3xl font-bold text-gray-800 mt-2">0</p>
+                        </div>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
+    // Jika teacher, tampilkan dashboard teacher
+    // Pastikan teacherData tidak null
+    if (!teacherData) {
+        return (
+            <AuthenticatedLayout>
+                <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
+                    <div className="bg-white p-8 rounded-3xl shadow-sm">
+                        <p className="text-gray-600">Loading teacher data...</p>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
     return (
         <AuthenticatedLayout>
             <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
@@ -13,7 +69,6 @@ const Dashboard = ({teacherData}: {teacherData: TeacherProps}) => {
 
                     {/* Welcome Card */}
                     <div className="flex-1 bg-white p-8 rounded-3xl shadow-sm flex items-start space-x-6 relative">
-                        {/* 2. PAKE TAG <img> DI SINI */}
                         <div className="hidden sm:block w-32 flex-shrink-0">
                             <img src="/images/icon-guru.png" alt="Teacher" className="w-full h-auto object-contain" />
                         </div>
@@ -55,7 +110,7 @@ const Dashboard = ({teacherData}: {teacherData: TeacherProps}) => {
                         </div>
 
                         <div className="border-t pt-4">
-                            <p className="font-bold text-gray-700 mb-2">Ranting: 4</p>
+                            <p className="font-bold text-gray-700 mb-2">Rating: 4</p>
                             <div className="flex space-x-1">
                                 {[...Array(4)].map((_, i) => <Star key={i} fill="#FACC15" color="#FACC15" size={20} />)}
                                 <Star color="#D1D5DB" size={20} />

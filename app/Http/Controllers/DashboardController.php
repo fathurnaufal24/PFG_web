@@ -9,9 +9,24 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $userdata = auth()->user()->load('teacher');
+        $user = auth()->user();
+        $user->load('teacher');
+
+        $role = $user->role;
+        $teacherData = null;
+        $isAdmin = false;
+
+        if ($role === 'admin') {
+            $isAdmin = true;
+            $teacherData = null;
+        } else if ($role === 'teacher') {
+            $teacherData = $user->teacher;
+        }
         return Inertia::render('Dashboard', [
-        'teacherData' => $userdata->teacher
+            'teacherData' => $teacherData,
+            'isAdmin' => $isAdmin,
+            'userRole' => $role,
+            'userName' => $user->name,
         ]);
     }
 }
