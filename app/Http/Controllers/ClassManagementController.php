@@ -11,7 +11,23 @@ class ClassManagementController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $classManagements = ClassManagement::with(['course', 'teacher.user'])->get()->map(function ($class) {
+
+        // Query dasar
+        $query = ClassManagement::with(['course', 'teacher.user']);
+
+        // Jika bukan admin, filter hanya data yang dimiliki teacher tersebut
+        if ($user->role !== 'admin') {
+            // Pastikan user memiliki relasi teacher
+            if ($user->teacher) {
+                $query->where('teacher_id', $user->teacher->id);
+            } else {
+                // Jika teacher tidak memiliki relasi teacher (shouldn't happen), return empty
+                $query->whereRaw('1 = 0'); // Tidak mengembalikan data apapun
+            }
+        }
+        // Jika admin, tidak ada filter (bisa lihat semua)
+
+        $classManagements = $query->get()->map(function ($class) {
             $subject = $class->course ? $class->course->subject : 'N/A';
             $levelType = $class->level . ' ' . ucfirst($class->type);
             $schedule = '-';
@@ -45,17 +61,20 @@ class ClassManagementController extends Controller
                 'students_text' => ($class->student ?? 0) . ' Student' . (($class->student ?? 0) > 1 ? 's' : ''),
                 'status' => $statusMap[$class->status] ?? $class->status,
                 'status_raw' => $class->status,
-                'teacher_name' => $class->teacher ? $class->teacher->first_name . ' ' . ($class->teacher->last_name ?? '') : 'Not Assigned',
+                'teacher_name' => $class->teacher ?
+                    $class->teacher->first_name . ' ' . ($class->teacher->last_name ?? '') :
+                    'Not Assigned',
                 'note' => $class->note,
             ];
         });
 
+        // Hitung status counts berdasarkan data yang sudah difilter
         $statusCounts = [
             'Lesson Plan' => $classManagements->where('status', 'Lesson Plan')->count(),
             'Active' => $classManagements->where('status', 'Active')->count(),
             'Report' => $classManagements->where('status', 'Report')->count(),
             'Parent Meeting' => $classManagements->where('status', 'Parent Meeting')->count(),
-            'Class Ended' =>  $classManagements->where('status', 'Class Ended')->count()
+            'Class Ended' => $classManagements->where('status', 'Class Ended')->count()
         ];
 
         $tabs = collect($statusCounts)->map(function ($count, $name) {
@@ -69,9 +88,11 @@ class ClassManagementController extends Controller
             'classes' => $classManagements,
             'tabs' => $tabs,
             'canCreate' => $user->role === 'admin',
-            'canEdit' => $user->role === 'admin'
+            'canEdit' => $user->role === 'admin',
+            'userRole' => $user->role, // Kirim role ke frontend (opsional)
         ]);
     }
+
     public function store(Request $request)
     {
         // Hanya admin yang bisa create
@@ -101,10 +122,21 @@ class ClassManagementController extends Controller
 
     public function show(ClassManagement $classmanagement)
     {
+        $user = auth()->user();
+
+        // Cek akses: admin bisa lihat semua, teacher hanya bisa lihat miliknya sendiri
+        if ($user->role !== 'admin') {
+            // Pastikan teacher hanya bisa melihat data miliknya
+            if (!$user->teacher || $classmanagement->teacher_id !== $user->teacher->id) {
+                abort(403, 'You are not authorized to view this class.');
+            }
+        }
+
         $classmanagement->load(['course', 'teacher.user']);
 
         return Inertia::render('ClassManagement/Show', [
-            'class' => $classmanagement
+            'class' => $classmanagement,
+            'canEdit' => $user->role === 'admin',
         ]);
     }
 

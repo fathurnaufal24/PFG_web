@@ -32,7 +32,7 @@ interface Props {
 }
 
 const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit }: Props) => {
-    const [activeTab, setActiveTab] = useState("Active");
+    const [activeTab, setActiveTab] = useState("Lesson Plan");
     const [searchTerm, setSearchTerm] = useState("");
 
     // Filter classes berdasarkan tab dan search
