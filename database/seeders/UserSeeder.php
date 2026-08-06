@@ -80,7 +80,7 @@ class UserSeeder extends Seeder
             'level' => 1,
             'period' => 3,
             'order' => 3,
-            'type' => 'trial',
+            'type' => 'regular',
             'session' => 0,
             'schedule_at' => now()->addDays(3), // TAMBAHKAN INI
             'note' => 'lorem ipsum dolor sit amet',
@@ -105,7 +105,7 @@ class UserSeeder extends Seeder
             'level' => 1,
             'period' => 1,
             'order' => 2,
-            'type' => 'trial',
+            'type' => 'private',
             'session' => 0,
             'schedule_at' => now()->addDays(7), // TAMBAHKAN INI
             'note' => 'lorem ipsum dolor sit amet',

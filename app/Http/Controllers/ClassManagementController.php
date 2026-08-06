@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassManagement;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,24 +13,20 @@ class ClassManagementController extends Controller
     {
         $user = auth()->user();
 
-        // Query dasar
         $query = ClassManagement::with(['course', 'teacher.user']);
 
-        // Jika bukan admin, filter hanya data yang dimiliki teacher tersebut
         if ($user->role !== 'admin') {
-            // Pastikan user memiliki relasi teacher
             if ($user->teacher) {
                 $query->where('teacher_id', $user->teacher->id);
             } else {
-                // Jika teacher tidak memiliki relasi teacher (shouldn't happen), return empty
-                $query->whereRaw('1 = 0'); // Tidak mengembalikan data apapun
+                $query->whereRaw('1 = 0');
             }
         }
-        // Jika admin, tidak ada filter (bisa lihat semua)
 
         $classManagements = $query->get()->map(function ($class) {
             $subject = $class->course ? $class->course->subject : 'N/A';
-            $levelType = $class->level . ' ' . ucfirst($class->type);
+
+            // Format schedule
             $schedule = '-';
             if ($class->schedule_at) {
                 try {
@@ -53,8 +50,8 @@ class ClassManagementController extends Controller
             return [
                 'id' => $class->id,
                 'subject' => $subject,
-                'level' => $class->level,
-                'level_type' => $levelType,
+                'level' => $class->level ?? 0,
+                'type' => $class->type ?? '-', // PASTIKAN INI ADA
                 'session' => $class->session ?? 0,
                 'schedule' => $schedule,
                 'students' => $class->student ?? 0,
@@ -68,7 +65,6 @@ class ClassManagementController extends Controller
             ];
         });
 
-        // Hitung status counts berdasarkan data yang sudah difilter
         $statusCounts = [
             'Lesson Plan' => $classManagements->where('status', 'Lesson Plan')->count(),
             'Active' => $classManagements->where('status', 'Active')->count(),
@@ -84,12 +80,16 @@ class ClassManagementController extends Controller
             ];
         })->values()->toArray();
 
+        // Ambil semua courses untuk dropdown
+        $courses = \App\Models\Course::all(['id', 'subject', 'description']);
+
         return Inertia::render('ClassManagement/Index', [
             'classes' => $classManagements,
             'tabs' => $tabs,
             'canCreate' => $user->role === 'admin',
             'canEdit' => $user->role === 'admin',
-            'userRole' => $user->role, // Kirim role ke frontend (opsional)
+            'courses' => $courses,
+            'userRole' => $user->role,
         ]);
     }
 
@@ -102,17 +102,25 @@ class ClassManagementController extends Controller
 
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
-            'teacher_id' => 'nullable|exists:teachers,id',
-            'level' => 'required|integer',
-            'period' => 'required|integer',
-            'order' => 'required|integer',
             'type' => 'required|string|in:trial,regular,private',
-            'session' => 'nullable|integer',
-            'student' => 'nullable|integer',
+            'level' => 'required|integer',
+            'period' => 'required|string', // Ubah jadi string karena period code bisa berupa string
+            'order' => 'nullable|integer',
             'schedule_at' => 'nullable|date',
             'note' => 'nullable|string',
-            'status' => 'required|string|in:inactive,active,report,pm,ended'
+            'status' => 'required|string|in:inactive,active,report,pm,ended',
+            'teacher_id' => 'nullable|exists:teachers,id',
+            'session' => 'nullable|integer',
+            'student' => 'nullable|integer',
         ]);
+
+        // Set default values jika tidak ada
+        $validated['order'] = $validated['order'] ?? 1;
+        $validated['session'] = $validated['session'] ?? 0;
+        $validated['student'] = $validated['student'] ?? 0;
+
+        // Jika teacher_id tidak dikirim, set null
+        $validated['teacher_id'] = $validated['teacher_id'] ?? null;
 
         $classManagement = ClassManagement::create($validated);
 
