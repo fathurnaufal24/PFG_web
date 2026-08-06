@@ -49,11 +49,15 @@ class ClassManagementController extends Controller
 
             return [
                 'id' => $class->id,
+                'course_id' => $class->course_id, // Tambahkan ini
                 'subject' => $subject,
                 'level' => $class->level ?? 0,
-                'type' => $class->type ?? '-', // PASTIKAN INI ADA
+                'type' => $class->type ?? '-',
+                'period' => $class->period ?? '', // Tambahkan ini
+                'order' => $class->order ?? 1, // Tambahkan ini
                 'session' => $class->session ?? 0,
                 'schedule' => $schedule,
+                'schedule_at' => $class->schedule_at ? $class->schedule_at->format('Y-m-d\TH:i') : null,
                 'students' => $class->student ?? 0,
                 'students_text' => ($class->student ?? 0) . ' Student' . (($class->student ?? 0) > 1 ? 's' : ''),
                 'status' => $statusMap[$class->status] ?? $class->status,
@@ -61,6 +65,7 @@ class ClassManagementController extends Controller
                 'teacher_name' => $class->teacher ?
                     $class->teacher->first_name . ' ' . ($class->teacher->last_name ?? '') :
                     'Not Assigned',
+                'teacher_id' => $class->teacher_id, // Tambahkan ini
                 'note' => $class->note,
             ];
         });

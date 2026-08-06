@@ -8,7 +8,6 @@ interface ClassData {
     subject: string;
     level: number;
     type: string;
-    level_type: string;
     session: number;
     schedule: string;
     students: number;
@@ -17,6 +16,12 @@ interface ClassData {
     status_raw: string;
     teacher_name: string;
     note: string;
+    // Tambahkan field yang diperlukan untuk edit
+    course_id?: number;
+    period?: string;
+    order?: number;
+    teacher_id?: number | null;
+    schedule_at?: string;
 }
 
 interface TabData {
@@ -35,15 +40,28 @@ interface Props {
     tabs: TabData[];
     canCreate: boolean;
     canEdit: boolean;
-    courses?: Course[]; // Tambahkan ini untuk dropdown courses
+    courses?: Course[];
 }
 
 const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] }: Props) => {
     const [activeTab, setActiveTab] = useState("Lesson Plan");
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false); // Tambahkan ini
+    const [editId, setEditId] = useState<number | null>(null); // Tambahkan ini
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        course_id: string;
+        type: string;
+        level: string;
+        period: string;
+        order: string;
+        schedule_at: string;
+        note: string;
+        teacher_id: string | null; // Ubah jadi string | null
+        session: number;
+        student: number;
+    }>({
         course_id: '',
         type: '',
         level: '',
@@ -51,7 +69,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
         order: '',
         schedule_at: '',
         note: '',
-        status: 'inactive',
         teacher_id: null,
         session: 0,
         student: 0,
@@ -93,35 +110,94 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
             return;
         }
 
-        router.post('/classmanagement', formData, {
-            onSuccess: () => {
-                setIsModalOpen(false);
-                setFormData({
-                    course_id: '',
-                    type: '',
-                    level: '',
-                    period: '',
-                    order: '',
-                    schedule_at: '',
-                    note: '',
-                    status: 'inactive',
-                    teacher_id: null,
-                    session: 0,
-                    student: 0,
-                });
-                setIsSubmitting(false);
-            },
-            onError: (errors) => {
-                console.error('Validation errors:', errors);
-                alert('Failed to create class. Please check your input.');
-                setIsSubmitting(false);
-            }
+        // Siapkan data untuk dikirim
+        const submitData = {
+            course_id: parseInt(formData.course_id),
+            type: formData.type,
+            level: parseInt(formData.level),
+            period: formData.period,
+            order: parseInt(formData.order),
+            schedule_at: formData.schedule_at || null,
+            note: formData.note || null,
+            teacher_id: formData.teacher_id ? parseInt(formData.teacher_id) : null,
+            session: formData.session || 0,
+            student: formData.student || 0,
+        };
+
+        if (isEditMode && editId) {
+            router.put(`/classmanagement/${editId}`, submitData, {
+                onSuccess: () => {
+                    closeModal();
+                    setIsSubmitting(false);
+                },
+                onError: (errors) => {
+                    console.error('Validation errors:', errors);
+                    alert('Failed to update class. Please check your input.');
+                    setIsSubmitting(false);
+                }
+            });
+        } else {
+            router.post('/classmanagement', submitData, {
+                onSuccess: () => {
+                    closeModal();
+                    setIsSubmitting(false);
+                },
+                onError: (errors) => {
+                    console.error('Validation errors:', errors);
+                    alert('Failed to create class. Please check your input.');
+                    setIsSubmitting(false);
+                }
+            });
+        }
+    };
+
+    const openCreateModal = () => {
+        setIsEditMode(false);
+        setEditId(null);
+        setFormData({
+            course_id: '',
+            type: '',
+            level: '',
+            period: '',
+            order: '',
+            schedule_at: '',
+            note: '',
+            teacher_id: null,
+            session: 0,
+            student: 0,
         });
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (classData: ClassData) => {
+        // Cari data lengkap dari classes berdasarkan id
+        const fullData = classes.find(c => c.id === classData.id);
+        if (!fullData) return;
+
+        console.log('Full data for edit:', fullData); // Untuk debugging
+
+        setIsEditMode(true);
+        setEditId(classData.id);
+        setFormData({
+            course_id: String(fullData.course_id || ''),
+            type: fullData.type,
+            level: String(fullData.level),
+            period: String(fullData.period || ''),
+            order: String(fullData.order || '1'),
+            schedule_at: fullData.schedule_at || '', // Ini akan terisi dengan format YYYY-MM-DDTHH:mm
+            note: fullData.note || '',
+            teacher_id: fullData.teacher_id ? String(fullData.teacher_id) : null,
+            session: fullData.session || 0,
+            student: fullData.students || 0,
+        });
+        setIsModalOpen(true);
     };
 
     const closeModal = () => {
         if (!isSubmitting) {
             setIsModalOpen(false);
+            setIsEditMode(false);
+            setEditId(null);
             setFormData({
                 course_id: '',
                 type: '',
@@ -130,7 +206,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                 order: '',
                 schedule_at: '',
                 note: '',
-                status: 'inactive',
                 teacher_id: null,
                 session: 0,
                 student: 0,
@@ -180,9 +255,9 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                 <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
                     <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex items-center gap-4 w-full md:w-auto">
-                            {canCreate && (
+                            {canCreate && activeTab === "Lesson Plan" && (
                                 <button
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={openCreateModal}
                                     className="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-600 transition whitespace-nowrap"
                                 >
                                     <Plus size={18} /> Add Class
@@ -234,7 +309,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                                                 </span>
                                             </td>
                                             <td className="p-6">
-                                                {/* TAMPILKAN TYPE DENGAN BADGE WARNA */}
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getTypeBadgeClass(item.type)}`}>
                                                     {item.type}
                                                 </span>
@@ -255,7 +329,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                                                     {canEdit && (
                                                         <>
                                                             <button
-                                                                onClick={() => router.get(`/classmanagement/${item.id}/edit`)}
+                                                                onClick={() => openEditModal(item)}
                                                                 className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
                                                                 title="Edit"
                                                             >
@@ -281,13 +355,15 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                 </div>
             </div>
 
-            {/* Modal Add Class */}
+            {/* Modal Add/Edit Class */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800">Add New Class</h2>
+                            <h2 className="text-2xl font-bold text-gray-800">
+                                {isEditMode ? 'Edit Class' : 'Add New Class'}
+                            </h2>
                             <button
                                 onClick={closeModal}
                                 className="p-2 hover:bg-gray-100 rounded-full transition"
@@ -297,7 +373,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                             </button>
                         </div>
 
-                        {/* Modal Body */}
+                        {/* Modal Body - Sama seperti sebelumnya */}
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="space-y-4">
                                 {/* Course Dropdown */}
@@ -340,59 +416,74 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                                     </select>
                                 </div>
 
-                                {/* Level Input */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Level <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="level"
-                                        value={formData.level}
-                                        onChange={handleInputChange}
-                                        required
-                                        min="1"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                        placeholder="Enter level (e.g., 1, 2, 3)"
-                                    />
-                                </div>
+                                {/* Grid 2 kolom */}
+                                <div className='grid grid-cols-2 gap-3'>
+                                    {/* Level Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Level <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="level"
+                                            value={formData.level}
+                                            onChange={handleInputChange}
+                                            required
+                                            min="1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter level (e.g., 1, 2, 3)"
+                                        />
+                                    </div>
 
-                                {/* Class Period Code */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Class Period Code <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="period"
-                                        value={formData.period}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                        placeholder="Enter period code (e.g., 1, 2, 3)"
-                                    />
-                                </div>
+                                    {/* Class Period Code */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Class Period Code <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="period"
+                                            value={formData.period}
+                                            onChange={handleInputChange}
+                                            required
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter period code (e.g., 1, 2, 3)"
+                                        />
+                                    </div>
 
-                                {/* Order (hidden but required) */}
-                                <input
-                                    type="hidden"
-                                    name="order"
-                                    value={formData.order || '1'}
-                                    onChange={handleInputChange}
-                                />
+                                    {/* Order Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Order <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="order"
+                                            value={formData.order}
+                                            onChange={handleInputChange}
+                                            required
+                                            min="1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter order number (e.g., 1, 2, 3)"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Order number to sequence classes within the same period
+                                        </p>
+                                    </div>
 
-                                {/* Start Schedule */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Start Schedule
-                                    </label>
-                                    <input
-                                        type="datetime-local"
-                                        name="schedule_at"
-                                        value={formData.schedule_at}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    />
+                                    {/* Start Schedule */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Start Schedule
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            name="schedule_at"
+                                            value={formData.schedule_at}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Note */}
@@ -410,10 +501,10 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                                     />
                                 </div>
 
-                                {/* Hidden fields for default values */}
-                                <input type="hidden" name="status" value="inactive" />
-                                <input type="hidden" name="session" value="0" />
-                                <input type="hidden" name="student" value="0" />
+                                {/* Hidden fields */}
+                                <input type="hidden" name="session" value={formData.session} />
+                                <input type="hidden" name="student" value={formData.student} />
+                                <input type="hidden" name="teacher_id" value={formData.teacher_id || ''} />
                             </div>
 
                             {/* Modal Footer */}
@@ -433,10 +524,10 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [] 
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <span className="animate-spin">⏳</span> Creating...
+                                            <span className="animate-spin">⏳</span> {isEditMode ? 'Updating...' : 'Creating...'}
                                         </>
                                     ) : (
-                                        'Create Class'
+                                        isEditMode ? 'Update Class' : 'Create Class'
                                     )}
                                 </button>
                             </div>
