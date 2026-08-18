@@ -16,7 +16,7 @@ export default function CourseShow({ course }: { course: Course }) {
                 <section>
                     <div>
                         <p className="font-semibold">Teacher</p>
-                        <p>{course.teacher.first_name}</p>
+                        <p>{course.teacher?.first_name || '-'}</p>
                     </div>
                     <div>
                         <p className="font-semibold">Release Schedule</p>

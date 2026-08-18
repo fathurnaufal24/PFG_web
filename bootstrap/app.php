@@ -11,6 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
+        if (env('APP_ENV') === 'local') {
+            $middleware->trustHosts(at: ['^.*$']);
+        } else {
+            $middleware->trustHosts(at: [
+                'arrijal-ifal-ideapad.taildef515.ts.net'
+            ]);
+        }
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,

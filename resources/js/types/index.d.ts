@@ -77,6 +77,7 @@ export interface Course {
     period: number;
     order: number;
     type: string;
+    teacher?: TeacherProps | null;
     session?: number;
     note?: string;
     student?: number;

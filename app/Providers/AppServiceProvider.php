@@ -21,7 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // URL::forceScheme('https');
+        if (request()->header('X-Forwarded-Proto') === 'https') {
+            URL::forceScheme('https');
+        }
+
         Vite::prefetch(concurrency: 3);
     }
 }
