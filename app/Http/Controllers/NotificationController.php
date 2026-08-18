@@ -11,6 +11,7 @@ class NotificationController extends Controller
     public function index()
     {
         $user = auth()->user();
+
         $notifications = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -29,7 +30,11 @@ class NotificationController extends Controller
             abort(403);
         }
 
-        $notification->markAsRead();
+        $notification->update(['read' => true]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return back();
     }

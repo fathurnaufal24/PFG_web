@@ -63,6 +63,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/classoffering/{classOffering}/approve/{applicationId}', [ClassOfferingController::class, 'approve'])->name('classoffering.approve');
     Route::post('/classoffering/{classOffering}/reject/{applicationId}', [ClassOfferingController::class, 'reject'])->name('classoffering.reject');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
     Route::get('/parentmeeting', [ParentMeetingController::class, 'index'])->name('parentmeeting');
 });
 

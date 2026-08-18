@@ -2,15 +2,37 @@ import logoPFG from './logo-sidebar.png';
 import {
   LayoutDashboard, Users, Wallet, Calendar,
   BookOpen, Gift, Bell, UserPlus, LogOut, X,
-  User, Settings // Tambahkan icon User dan Settings
+  User, Settings
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 
 const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;}) => {
   // Ambil data user dari Inertia
   const { props } = usePage();
-  const user = props.auth.user; // Sesuaikan dengan struktur data Anda
+  const user = props.auth.user;
+  const isAdmin = user?.role === 'admin';
+
+  // State untuk unread count
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Ambil unread count dari props yang dikirim dari controller
+  // atau fetch sendiri
+  useEffect(() => {
+    // Jika user bukan admin, ambil unread count
+    if (!isAdmin) {
+      // Ambil dari props jika sudah dikirim dari controller
+      if (props.unreadCount !== undefined) {
+        setUnreadCount(props.unreadCount as number);
+      } else {
+        // Atau fetch dari API
+        fetch('/notifications/unread-count')
+          .then(res => res.json())
+          .then(data => setUnreadCount(data.count))
+          .catch(() => {});
+      }
+    }
+  }, [isAdmin, props.unreadCount]);
 
   const menus = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "dashboard" },
@@ -19,7 +41,12 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
     { name: "My Schedule", icon: <Calendar size={20} />, path: "schedule" },
     { name: "Module", icon: <BookOpen size={20} />, path: "module" },
     { name: "Class Offering", icon: <Gift size={20} />, path: "classoffering" },
-    { name: "Notifications", icon: <Bell size={20} />, path: "notifications" },
+    {
+      name: "Notifications",
+      icon: <Bell size={20} />,
+      path: "notifications",
+      badge: !isAdmin ? unreadCount : 0 // Badge hanya untuk teacher
+    },
     { name: "Parent Meeting", icon: <UserPlus size={20} />, path: "parentmeeting" },
   ];
 
@@ -62,7 +89,7 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
           </button>
         </div>
 
-        {/* User Profile Section - TAMBAHKAN INI */}
+        {/* User Profile Section */}
         <div className="mb-6 border-b border-gray-700 pb-4">
           <Link
             href="/profile"
@@ -91,21 +118,33 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
 
         {/* Navigation Menu */}
         <nav className="space-y-1 flex-1 overflow-y-auto">
-          {menus.map((menu) => (
-            <Link
-              key={menu.name}
-              href={route(menu.path)}
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center space-x-3 p-3 rounded-xl transition font-medium ${
-                route().current(menu.path)
-                ? 'bg-emerald-50 text-emerald-600'
-                : 'text-white hover:bg-gray-700/50 hover:text-white'
-              }`}
-            >
-              {menu.icon}
-              <span className="text-sm">{menu.name}</span>
-            </Link>
-          ))}
+          {menus.map((menu) => {
+            const isActive = route().current(menu.path);
+            const hasBadge = menu.badge && menu.badge > 0;
+
+            return (
+              <Link
+                key={menu.name}
+                href={route(menu.path)}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center justify-between p-3 rounded-xl transition font-medium ${
+                  isActive
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : 'text-white hover:bg-gray-700/50 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  {menu.icon}
+                  <span className="text-sm">{menu.name}</span>
+                </div>
+                {hasBadge && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {menu.badge > 99 ? '99+' : menu.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Logout Button */}

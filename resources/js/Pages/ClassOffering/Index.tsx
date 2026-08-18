@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { 
-    Plus, Search, Eye, Pencil, Trash2, X, 
+import {
+    Plus, Search, Eye, Pencil, Trash2, X,
     Users, Clock, Calendar, CheckCircle, XCircle,
     UserCheck, UserX, AlertCircle, Bell
 } from 'lucide-react';
@@ -61,14 +61,14 @@ interface Props {
     unreadCount: number;
 }
 
-const ClassOfferingIndex = ({ 
-    offerings, 
-    courses, 
-    isAdmin, 
-    canCreate, 
-    canEdit, 
+const ClassOfferingIndex = ({
+    offerings,
+    courses,
+    isAdmin,
+    canCreate,
+    canEdit,
     canDelete,
-    unreadCount 
+    unreadCount
 }: Props) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -242,11 +242,7 @@ const ClassOfferingIndex = ({
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <div className="flex items-center gap-3">
                             <h2 className="text-2xl font-bold text-gray-800">Class Offering</h2>
-                            {!isAdmin && unreadCount > 0 && (
-                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                    {unreadCount}
-                                </span>
-                            )}
+
                         </div>
                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
                             <select
@@ -266,8 +262,8 @@ const ClassOfferingIndex = ({
                                     <button
                                         onClick={() => setShowArchived(!showArchived)}
                                         className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                                            showArchived 
-                                                ? 'bg-emerald-100 text-emerald-700' 
+                                            showArchived
+                                                ? 'bg-emerald-100 text-emerald-700'
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
@@ -306,8 +302,8 @@ const ClassOfferingIndex = ({
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {filteredOfferings.map((offering) => (
-                                <div 
-                                    key={offering.id} 
+                                <div
+                                    key={offering.id}
                                     className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition ${
                                         offering.is_archived || offering.is_expired ? 'opacity-75' : ''
                                     }`}
@@ -404,7 +400,7 @@ const ClassOfferingIndex = ({
                                                 <div>
                                                     <p className="text-sm font-medium text-green-700">Accepted Teacher</p>
                                                     <p className="text-sm text-green-600">
-                                                        {offering.accepted_teacher.teacher_name} 
+                                                        {offering.accepted_teacher.teacher_name}
                                                         <span className="text-xs text-green-400 ml-2">
                                                             (approved {offering.accepted_teacher.approved_at})
                                                         </span>
@@ -418,7 +414,7 @@ const ClassOfferingIndex = ({
                                             <div className="pt-4 border-t border-gray-100">
                                                 {offering.has_applied ? (
                                                     <div className={`px-4 py-2 rounded-xl text-sm font-medium text-center ${
-                                                        offering.application_status === 'pending' 
+                                                        offering.application_status === 'pending'
                                                             ? 'bg-yellow-50 text-yellow-700'
                                                             : offering.application_status === 'accepted'
                                                                 ? 'bg-green-50 text-green-700'
