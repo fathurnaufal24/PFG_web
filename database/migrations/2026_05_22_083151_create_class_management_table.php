@@ -26,6 +26,7 @@ return new class extends Migration
             $table->dateTime('schedule_at')->nullable();
             $table->longText('note');
             $table->string('status')->default('inactive'); // ['inactive', 'active', 'report', 'pm', 'ended']
+            $table->boolean('planned')->default(false);
             $table->timestamps();
         });
     }

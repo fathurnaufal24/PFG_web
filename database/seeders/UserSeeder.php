@@ -60,7 +60,8 @@ class UserSeeder extends Seeder
             'session' => 0,
             'schedule_at' => now()->addDays(5), // TAMBAHKAN INI
             'note' => 'lorem ipsum dolor sit amet',
-            'status' => 'inactive' // TAMBAHKAN STATUS
+            'status' => 'inactive', // TAMBAHKAN STATUS
+            'planned' => false
         ]);
 
         // Teacher 2
@@ -84,7 +85,8 @@ class UserSeeder extends Seeder
             'session' => 0,
             'schedule_at' => now()->addDays(3), // TAMBAHKAN INI
             'note' => 'lorem ipsum dolor sit amet',
-            'status' => 'active' // TAMBAHKAN STATUS
+            'status' => 'active', // TAMBAHKAN STATUS
+            'planned' => true
         ]);
 
 
@@ -109,7 +111,8 @@ class UserSeeder extends Seeder
             'session' => 0,
             'schedule_at' => now()->addDays(7), // TAMBAHKAN INI
             'note' => 'lorem ipsum dolor sit amet',
-            'status' => 'report' // TAMBAHKAN STATUS
+            'status' => 'report', // TAMBAHKAN STATUS
+            'planned' => true
         ]);
     }
 }

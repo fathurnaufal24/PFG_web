@@ -28,4 +28,8 @@ class ClassManagement extends Model
     {
         return $this->belongsToMany(Student::class);
     }
+
+    public function lessonplan() {
+        return $this->hasOne(LessonPlan::class);
+    }
 }
