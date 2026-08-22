@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassManagement;
 use App\Models\Course;
+use App\Models\LessonPlan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -191,5 +192,55 @@ class ClassManagementController extends Controller
 
         return redirect()->route('classmanagement')
             ->with('success', 'Class deleted successfully');
+    }
+
+    /**
+     * Store a new lesson plan and update class status to active
+     */
+    public function storeLessonPlan(Request $request, ClassManagement $classmanagement)
+    {
+        // Hanya teacher yang bisa membuat lesson plan untuk class miliknya
+        $user = auth()->user();
+        if ($user->role !== 'teacher') {
+            abort(403, 'Only teachers can create lesson plans.');
+        }
+
+        // Pastikan teacher ini adalah pengajar di class tersebut
+        if (!$user->teacher || $classmanagement->teacher_id !== $user->teacher->id) {
+            abort(403, 'You are not assigned to this class.');
+        }
+
+        // Pastikan status class masih inactive
+        if ($classmanagement->status !== 'inactive') {
+            return back()->withErrors(['error' => 'Lesson plan can only be created for inactive classes.']);
+        }
+
+        // Validasi input
+        $validated = $request->validate([
+            'cdev' => 'required|array|min:1',
+            'cdev.*' => 'string|in:c1,c2,c3,c4,c5,c6',
+            'model' => 'required|string|max:255',
+            'method' => 'required|string|max:255',
+            'purpose' => 'required|string',
+            'output' => 'required|string',
+            'outcome' => 'required|string',
+        ]);
+
+        // Simpan lesson plan
+        $lessonPlan = LessonPlan::create([
+            'class_management_id' => $classmanagement->id,
+            'cdev' => json_encode($validated['cdev']), // Simpan sebagai JSON
+            'model' => $validated['model'],
+            'method' => $validated['method'],
+            'purpose' => $validated['purpose'],
+            'output' => $validated['output'],
+            'outcome' => $validated['outcome'],
+        ]);
+
+        // Update status class menjadi active
+        $classmanagement->update(['status' => 'active']);
+
+        return redirect()->route('classmanagement')
+            ->with('success', 'Lesson plan created successfully! Class status updated to Active.');
     }
 }

@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/classmanagement/{classmanagement}', [ClassManagementController::class, 'show'])->name('classmanagement.show');
     Route::get('/classmanagement/{classmanagement}/edit', [ClassManagementController::class, 'edit'])->name('classmanagement.edit');
     Route::post('/classmanagement', [ClassManagementController::class, 'store'])->name('classmanagement.store');
+    Route::post('/classmanagement/{classmanagement}/lesson-plan', [ClassManagementController::class, 'storeLessonPlan'])
+        ->name('classmanagement.lesson-plan.store');
     Route::put('/classmanagement/{classmanagement}', [ClassManagementController::class, 'update'])->name('classmanagement.update');
     Route::delete('/classmanagement/{classmanagement}', [ClassManagementController::class, 'destroy'])->name('classmanagement.destroy');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
