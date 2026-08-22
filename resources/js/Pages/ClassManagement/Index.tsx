@@ -50,7 +50,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     const [isEditMode, setIsEditMode] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // State untuk Lesson Plan
     const [isLessonPlanModalOpen, setIsLessonPlanModalOpen] = useState(false);
     const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -466,11 +466,183 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                 </div>
             </div>
 
-            {/* Modal Add/Edit Class - sudah ada */}
+            {/* Modal Add/Edit Class */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* ... konten modal create/edit ... */}
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                            <h2 className="text-2xl font-bold text-gray-800">
+                                {isEditMode ? 'Edit Class' : 'Add New Class'}
+                            </h2>
+                            <button
+                                onClick={closeModal}
+                                className="p-2 hover:bg-gray-100 rounded-full transition"
+                                disabled={isSubmitting}
+                            >
+                                <X size={24} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body - Form */}
+                        <form onSubmit={handleSubmit} className="p-6">
+                            <div className="space-y-4">
+                                {/* Course Dropdown */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Course <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        name="course_id"
+                                        value={formData.course_id}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    >
+                                        <option value="">Select Course</option>
+                                        {courses.map((course) => (
+                                            <option key={course.id} value={course.id}>
+                                                {course.subject} - {course.description || 'No description'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Class Type Dropdown */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Class Type <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        name="type"
+                                        value={formData.type}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    >
+                                        <option value="">Select Type</option>
+                                        <option value="trial">Trial</option>
+                                        <option value="regular">Regular</option>
+                                        <option value="private">Private</option>
+                                    </select>
+                                </div>
+
+                                {/* Grid 2 kolom */}
+                                <div className='grid grid-cols-2 gap-3'>
+                                    {/* Level Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Level <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="level"
+                                            value={formData.level}
+                                            onChange={handleInputChange}
+                                            required
+                                            min="1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter level (e.g., 1, 2, 3)"
+                                        />
+                                    </div>
+
+                                    {/* Class Period Code */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Class Period Code <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="period"
+                                            value={formData.period}
+                                            onChange={handleInputChange}
+                                            required
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter period code (e.g., 1, 2, 3)"
+                                        />
+                                    </div>
+
+                                    {/* Order Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Order <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="order"
+                                            value={formData.order}
+                                            onChange={handleInputChange}
+                                            required
+                                            min="1"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            placeholder="Enter order number (e.g., 1, 2, 3)"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Order number to sequence classes within the same period
+                                        </p>
+                                    </div>
+
+                                    {/* Start Schedule */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Start Schedule
+                                        </label>
+                                        <input
+                                            type="datetime-local"
+                                            name="schedule_at"
+                                            value={formData.schedule_at}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Note */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Note
+                                    </label>
+                                    <textarea
+                                        name="note"
+                                        value={formData.note}
+                                        onChange={handleInputChange}
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                                        placeholder="Add any notes about this class..."
+                                    />
+                                </div>
+
+                                {/* Hidden fields */}
+                                <input type="hidden" name="session" value={formData.session} />
+                                <input type="hidden" name="student" value={formData.student} />
+                                <input type="hidden" name="teacher_id" value={formData.teacher_id || ''} />
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    disabled={isSubmitting}
+                                    className="px-6 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <span className="animate-spin">⏳</span> {isEditMode ? 'Updating...' : 'Creating...'}
+                                        </>
+                                    ) : (
+                                        isEditMode ? 'Update Class' : 'Create Class'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
@@ -508,11 +680,10 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                                 key={option.value}
                                                 type="button"
                                                 onClick={() => toggleCdev(option.value)}
-                                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                                                    lessonPlanData.cdev.includes(option.value)
+                                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${lessonPlanData.cdev.includes(option.value)
                                                         ? 'bg-emerald-500 text-white shadow-md'
                                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                }`}
+                                                    }`}
                                             >
                                                 {option.label}
                                             </button>
