@@ -18,9 +18,22 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        // Load relasi user berdasarkan role
+        $user = $request->user();
+        
+        // Load relasi yang sesuai
+        if ($user->role === 'teacher') {
+            $user->load('teacher');
+        } elseif ($user->role === 'admin') {
+            $user->load('curriculum');
+        } elseif ($user->role === 'student') {
+            $user->load('student');
+        }
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'user' => $user, // Kirim user dengan relasi yang sudah di-load
         ]);
     }
 
@@ -29,12 +42,9 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // dd($request->all());
         $user = $request->user();
 
-        // if ($user->isDirty('email')) {
-        //     $user->email_verified_at = null;
-        // }
+        // Update email jika berubah
         if ($request->email !== $user->email) {
             $user->update([
                 'email' => $request->email
@@ -49,18 +59,20 @@ class ProfileController extends Controller
             'domicile',
             'card_number'
         ]);
-        // $request->user()->save();
-        if ($user->teacher) {
+
+        // Update berdasarkan role
+        if ($user->role === 'teacher' && $user->teacher) {
             $user->teacher()->update($requestData);
-        } else if ($user->curriculum) {
+        } else if ($user->role === 'admin' && $user->curriculum) {
             $user->curriculum()->update([
                 'name' => $request->name
             ]);
-        } else {
+        } else if ($user->role === 'student' && $user->student) {
             $user->student()->update([
                 'name' => $request->name
             ]);
         }
+
         return Redirect::route('profile.edit');
     }
 

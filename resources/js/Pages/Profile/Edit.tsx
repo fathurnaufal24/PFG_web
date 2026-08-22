@@ -31,9 +31,9 @@ export default function Edit({
 
     let initialData: FormDataProps;
 
-    if (user.role === 'teacher') {
+    if (user.role === 'teacher' && user.teacher) {
         initialData = {
-            first_name: user.teacher.first_name,
+            first_name: user.teacher.first_name ?? '',
             last_name: user.teacher.last_name ?? '',
             pob: user.teacher.pob ?? '',
             dob: user.teacher.dob ?? '',
@@ -45,7 +45,7 @@ export default function Edit({
             password: '',
             password_confirmation: '',
         };
-    } else if (user.role === 'admin') {
+    } else if (user.role === 'admin' && user.curriculum) {
         initialData = {
             first_name: '',
             last_name: '',
@@ -53,14 +53,28 @@ export default function Edit({
             dob: '',
             domicile: '',
             card_number: '',
-            name: user.curriculum?.name ?? user.name ?? '',
+            name: user.curriculum.name ?? user.name ?? '',
+            email: user.email,
+            current_password: '',
+            password: '',
+            password_confirmation: '',
+        };
+    } else if (user.role === 'student' && user.student) {
+        initialData = {
+            first_name: '',
+            last_name: '',
+            pob: '',
+            dob: '',
+            domicile: '',
+            card_number: '',
+            name: user.student.name ?? user.name ?? '',
             email: user.email,
             current_password: '',
             password: '',
             password_confirmation: '',
         };
     } else {
-        // student
+        // Fallback jika tidak ada relasi
         initialData = {
             first_name: '',
             last_name: '',
@@ -68,7 +82,7 @@ export default function Edit({
             dob: '',
             domicile: '',
             card_number: '',
-            name: user.student?.name ?? user.name ?? '',
+            name: user.name ?? '',
             email: user.email,
             current_password: '',
             password: '',
