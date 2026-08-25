@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, Eye, Pencil, Trash2, X, BookOpen } from 'lucide-react';
+import { Search, Plus, Eye, Pencil, Trash2, X, BookOpen, Clock } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router } from '@inertiajs/react';
 
@@ -21,6 +21,10 @@ interface ClassData {
     order?: number;
     teacher_id?: number | null;
     schedule_at?: string;
+    preferred_day?: string;
+    preferred_time?: string;
+    has_schedule?: boolean;
+    total_meetings?: number;
 }
 
 interface TabData {
@@ -64,6 +68,20 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         outcome: '',
     });
 
+    // State untuk Set Time
+    const [isSetTimeModalOpen, setIsSetTimeModalOpen] = useState(false);
+    const [setTimeClassId, setSetTimeClassId] = useState<number | null>(null);
+    const [isSetTimeSubmitting, setIsSetTimeSubmitting] = useState(false);
+    const [setTimeData, setSetTimeData] = useState({
+        start_date: '',
+        start_time: '',
+        start_this_week: false,
+        meeting_count: 10,
+    });
+
+    // State untuk modal notifikasi "Admin belum mengatur jam"
+    const [showNoScheduleModal, setShowNoScheduleModal] = useState(false);
+
     const [formData, setFormData] = useState<{
         course_id: string;
         type: string;
@@ -100,6 +118,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         return matchesTab && matchesSearch;
     });
 
+    // --- Handlers untuk Class Management ---
     const handleDelete = (id: number, subject: string) => {
         if (confirm(`Are you sure you want to delete class "${subject}"?`)) {
             router.delete(`/classmanagement/${id}`);
@@ -113,6 +132,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         });
     };
 
+    // --- Handlers untuk Lesson Plan ---
     const handleLessonPlanInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setLessonPlanData({
             ...lessonPlanData,
@@ -129,7 +149,17 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             }
         });
     };
+    // --- Handlers untuk Set Time ---
+    const handleSetTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, type, value, checked } = e.target;
 
+        setSetTimeData((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    // --- Submit Handlers ---
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -196,6 +226,14 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             return;
         }
 
+        // Cek apakah class sudah punya schedule
+        const classItem = classes.find(c => c.id === selectedClassId);
+        if (!classItem?.has_schedule) {
+            setShowNoScheduleModal(true);
+            setIsLessonPlanSubmitting(false);
+            return;
+        }
+
         router.post(`/classmanagement/${selectedClassId}/lesson-plan`, lessonPlanData, {
             onSuccess: () => {
                 closeLessonPlanModal();
@@ -209,6 +247,44 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         });
     };
 
+    const handleSetTimeSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSetTimeSubmitting(true);
+
+        if (!setTimeData.start_date || !setTimeData.start_time) {
+            alert('Please fill in all required fields.');
+            setIsSetTimeSubmitting(false);
+            return;
+        }
+
+        if (!setTimeClassId) {
+            alert('Invalid class.');
+            setIsSetTimeSubmitting(false);
+            return;
+        }
+
+        const submitData = {
+            ...setTimeData,
+            start_date: setTimeData.start_date,
+            start_time: setTimeData.start_time,
+            start_this_week: setTimeData.start_this_week,
+            meeting_count: setTimeData.meeting_count,
+        };
+
+        router.post(`/classmanagement/${setTimeClassId}/set-time`, submitData, {
+            onSuccess: () => {
+                closeSetTimeModal();
+                setIsSetTimeSubmitting(false);
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                alert('Failed to set time. Please check your input.');
+                setIsSetTimeSubmitting(false);
+            }
+        });
+    };
+
+    // --- Modal Open/Close ---
     const openCreateModal = () => {
         setIsEditMode(false);
         setEditId(null);
@@ -249,6 +325,13 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     };
 
     const openLessonPlanModal = (classId: number) => {
+        // Cek apakah class sudah punya schedule
+        const classItem = classes.find(c => c.id === classId);
+        if (!classItem?.has_schedule) {
+            setShowNoScheduleModal(true);
+            return;
+        }
+
         setSelectedClassId(classId);
         setLessonPlanData({
             cdev: [],
@@ -259,6 +342,47 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             outcome: '',
         });
         setIsLessonPlanModalOpen(true);
+    };
+
+    const openSetTimeModal = (classId: number) => {
+        const classItem = classes.find(c => c.id === classId);
+        setSetTimeClassId(classId);
+
+        // Set default date based on preferred_day
+        let defaultDate = new Date();
+        const dayMap: { [key: string]: number } = {
+            'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4,
+            'Friday': 5, 'Saturday': 6, 'Sunday': 0
+        };
+
+        if (classItem?.preferred_day && dayMap[classItem.preferred_day] !== undefined) {
+            const targetDay = dayMap[classItem.preferred_day];
+            const currentDay = defaultDate.getDay();
+            let daysToAdd = targetDay - currentDay;
+
+            // Jika hari ini sudah lewat dari target day, tambah 1 minggu
+            if (daysToAdd < 0 || (daysToAdd === 0 && new Date().getHours() >= 12)) {
+                daysToAdd += 7;
+            }
+            defaultDate.setDate(defaultDate.getDate() + daysToAdd);
+        } else {
+            // Default: 7 hari dari sekarang
+            defaultDate.setDate(defaultDate.getDate() + 7);
+        }
+
+        // Format date untuk input date (YYYY-MM-DD)
+        const year = defaultDate.getFullYear();
+        const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
+        const day = String(defaultDate.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+
+        setSetTimeData({
+            start_date: formattedDate,
+            start_time: '09:00',
+            start_this_week: false,
+            meeting_count: 10,
+        });
+        setIsSetTimeModalOpen(true);
     };
 
     const closeModal = () => {
@@ -296,6 +420,19 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         }
     };
 
+    const closeSetTimeModal = () => {
+        if (!isSetTimeSubmitting) {
+            setIsSetTimeModalOpen(false);
+            setSetTimeClassId(null);
+            setSetTimeData({
+                start_date: '',
+                start_time: '',
+                start_this_week: false,
+                meeting_count: 10,
+            });
+        }
+    };
+
     const getTypeBadgeClass = (type: string) => {
         const baseClass = "px-3 py-1 rounded-full text-xs font-medium capitalize";
         switch (type.toLowerCase()) {
@@ -318,6 +455,9 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         { value: 'c5', label: 'C5 - Evaluate' },
         { value: 'c6', label: 'C6 - Create' },
     ];
+
+    const isAdmin = userRole === 'admin';
+    const isTeacher = userRole === 'teacher';
 
     return (
         <AuthenticatedLayout>
@@ -392,10 +532,14 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     </tr>
                                 ) : (
                                     filteredClasses.map((item, index) => {
-                                        // Cek apakah user adalah teacher dan statusnya inactive
-                                        const isTeacher = userRole === 'teacher';
                                         const isInactive = item.status_raw === 'inactive';
+                                        const hasSchedule = item.has_schedule || false;
+
+                                        // Cek apakah user adalah teacher
                                         const showLessonPlanButton = isTeacher && isInactive && activeTab === 'Lesson Plan';
+
+                                        // Cek apakah admin dan inactive (tombol Set Time)
+                                        const showSetTimeButton = isAdmin && isInactive;
 
                                         return (
                                             <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
@@ -417,26 +561,47 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                                 <td className="p-6 text-sm">{item.teacher_name}</td>
                                                 <td className="p-6">
                                                     <div className="flex justify-center gap-2">
-                                                        {showLessonPlanButton ? (
-                                                            // Tombol Start Lesson Plan untuk teacher dengan status inactive
+                                                        {/* Admin: Set Time button untuk inactive class */}
+                                                        {showSetTimeButton ? (
                                                             <button
-                                                                onClick={() => openLessonPlanModal(item.id)}
-                                                                className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm hover:bg-emerald-600 transition flex items-center gap-2"
-                                                                title="Start Lesson Plan"
+                                                                onClick={() => openSetTimeModal(item.id)}
+                                                                className={`px-3 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 ${hasSchedule
+                                                                        ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                                                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                                                                    }`}
+                                                                title={hasSchedule ? 'Edit Time' : 'Set Time'}
                                                             >
-                                                                <BookOpen size={16} /> Start Lesson Plan
+                                                                <Clock size={16} />
+                                                                {hasSchedule ? 'Edit Time' : 'Set Time'}
                                                             </button>
                                                         ) : (
-                                                            // Tombol View untuk role lain atau status bukan inactive
-                                                            <button
-                                                                onClick={() => router.get(`/classmanagement/${item.id}`)}
-                                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                                                                title="View"
-                                                            >
-                                                                <Eye size={16} />
-                                                            </button>
+                                                            // Teacher: Start Lesson Plan atau View
+                                                            showLessonPlanButton ? (
+                                                                <button
+                                                                    onClick={() => openLessonPlanModal(item.id)}
+                                                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 ${hasSchedule
+                                                                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                                                            : 'bg-gray-400 text-white cursor-not-allowed'
+                                                                        }`}
+                                                                    title={hasSchedule ? 'Start Lesson Plan' : 'Admin belum mengatur jam'}
+                                                                    disabled={!hasSchedule}
+                                                                >
+                                                                    <BookOpen size={16} /> Start Lesson Plan
+                                                                </button>
+                                                            ) : (
+                                                                // View button untuk semua role lainnya
+                                                                <button
+                                                                    onClick={() => router.get(`/classmanagement/${item.id}`)}
+                                                                    className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                                                    title="View"
+                                                                >
+                                                                    <Eye size={16} />
+                                                                </button>
+                                                            )
                                                         )}
-                                                        {canEdit && (
+
+                                                        {/* Edit & Delete untuk admin - hanya jika bukan showSetTimeButton */}
+                                                        {canEdit && !showSetTimeButton && (
                                                             <>
                                                                 <button
                                                                     onClick={() => openEditModal(item)}
@@ -470,7 +635,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-100">
                             <h2 className="text-2xl font-bold text-gray-800">
                                 {isEditMode ? 'Edit Class' : 'Add New Class'}
@@ -484,10 +648,8 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                             </button>
                         </div>
 
-                        {/* Modal Body - Form */}
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="space-y-4">
-                                {/* Course Dropdown */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Course <span className="text-red-500">*</span>
@@ -508,7 +670,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     </select>
                                 </div>
 
-                                {/* Class Type Dropdown */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Class Type <span className="text-red-500">*</span>
@@ -527,9 +688,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     </select>
                                 </div>
 
-                                {/* Grid 2 kolom */}
                                 <div className='grid grid-cols-2 gap-3'>
-                                    {/* Level Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Level <span className="text-red-500">*</span>
@@ -546,7 +705,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                         />
                                     </div>
 
-                                    {/* Class Period Code */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Class Period Code <span className="text-red-500">*</span>
@@ -562,7 +720,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                         />
                                     </div>
 
-                                    {/* Order Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Order <span className="text-red-500">*</span>
@@ -582,7 +739,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                         </p>
                                     </div>
 
-                                    {/* Start Schedule */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Start Schedule
@@ -597,7 +753,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     </div>
                                 </div>
 
-                                {/* Note */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Note
@@ -612,13 +767,11 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     />
                                 </div>
 
-                                {/* Hidden fields */}
                                 <input type="hidden" name="session" value={formData.session} />
                                 <input type="hidden" name="student" value={formData.student} />
                                 <input type="hidden" name="teacher_id" value={formData.teacher_id || ''} />
                             </div>
 
-                            {/* Modal Footer */}
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                                 <button
                                     type="button"
@@ -651,11 +804,8 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             {isLessonPlanModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800">
-                                Start Lesson Plan
-                            </h2>
+                            <h2 className="text-2xl font-bold text-gray-800">Start Lesson Plan</h2>
                             <button
                                 onClick={closeLessonPlanModal}
                                 className="p-2 hover:bg-gray-100 rounded-full transition"
@@ -665,10 +815,8 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                             </button>
                         </div>
 
-                        {/* Modal Body */}
                         <form onSubmit={handleLessonPlanSubmit} className="p-6">
                             <div className="space-y-5">
-                                {/* 1. Cognitive Development */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Cognitive Development <span className="text-red-500">*</span>
@@ -696,7 +844,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     )}
                                 </div>
 
-                                {/* 2. Learning Model */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Learning Model <span className="text-red-500">*</span>
@@ -712,7 +859,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     />
                                 </div>
 
-                                {/* 3. Learning Method */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Learning Method <span className="text-red-500">*</span>
@@ -728,7 +874,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     />
                                 </div>
 
-                                {/* 4. Learning Purpose */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Learning Purpose <span className="text-red-500">*</span>
@@ -744,7 +889,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     />
                                 </div>
 
-                                {/* 5. Output Plan */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Output Plan <span className="text-red-500">*</span>
@@ -760,7 +904,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     />
                                 </div>
 
-                                {/* 6. Outcome Plan */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Outcome Plan <span className="text-red-500">*</span>
@@ -777,7 +920,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                 </div>
                             </div>
 
-                            {/* Modal Footer */}
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                                 <button
                                     type="button"
@@ -802,6 +944,142 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Set Time */}
+            {isSetTimeModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                            <h2 className="text-2xl font-bold text-gray-800">
+                                Set Class Schedule
+                            </h2>
+                            <button
+                                onClick={closeSetTimeModal}
+                                className="p-2 hover:bg-gray-100 rounded-full transition"
+                                disabled={isSetTimeSubmitting}
+                            >
+                                <X size={24} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSetTimeSubmit} className="p-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Start Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="start_date"
+                                        value={setTimeData.start_date}
+                                        onChange={handleSetTimeChange}
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Select the first meeting date
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Start Time <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="time"
+                                        name="start_time"
+                                        value={setTimeData.start_time}
+                                        onChange={handleSetTimeChange}
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Meeting Count
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="meeting_count"
+                                        value={setTimeData.meeting_count}
+                                        onChange={handleSetTimeChange}
+                                        min="1"
+                                        max="20"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Number of weekly meetings (default: 10)
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="start_this_week"
+                                        name="start_this_week"
+                                        checked={setTimeData.start_this_week}
+                                        onChange={handleSetTimeChange}
+                                        className="w-4 h-4 text-emerald-500 focus:ring-emerald-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="start_this_week" className="text-sm font-medium text-gray-700">
+                                        Start this week (if unchecked, starts next week)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={closeSetTimeModal}
+                                    disabled={isSetTimeSubmitting}
+                                    className="px-6 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSetTimeSubmitting}
+                                    className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isSetTimeSubmitting ? (
+                                        <>
+                                            <span className="animate-spin">⏳</span> Saving...
+                                        </>
+                                    ) : (
+                                        'Set Schedule'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal No Schedule (Admin belum mengatur jam) */}
+            {showNoScheduleModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-xl max-w-md w-full">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Clock size={32} className="text-amber-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                                Admin Belum Mengatur Jam
+                            </h3>
+                            <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                                Admin belum mengatur jadwal untuk kelas ini. Silahkan hubungi admin untuk mengatur jadwal terlebih dahulu sebelum memulai Lesson Plan.
+                            </p>
+                            <button
+                                onClick={() => setShowNoScheduleModal(false)}
+                                className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition"
+                            >
+                                Mengerti
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

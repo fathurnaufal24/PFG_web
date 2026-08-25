@@ -21,12 +21,14 @@ class ClassOffering extends Model
         'note',
         'is_archived',
         'close_offering',
+        'preferences', // Tambahkan field preferences (JSON)
     ];
 
     protected $casts = [
         'schedule_at' => 'datetime',
         'close_offering' => 'datetime',
         'is_archived' => 'boolean',
+        'preferences' => 'array', // Cast JSON ke array
     ];
 
     public function course()

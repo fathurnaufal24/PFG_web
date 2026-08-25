@@ -52,6 +52,12 @@ Route::middleware('auth')->group(function () {
         ->name('classmanagement.lesson-plan.store');
     Route::put('/classmanagement/{classmanagement}', [ClassManagementController::class, 'update'])->name('classmanagement.update');
     Route::delete('/classmanagement/{classmanagement}', [ClassManagementController::class, 'destroy'])->name('classmanagement.destroy');
+    Route::post('/classmanagement/{classmanagement}/set-time', [ClassManagementController::class, 'setTime'])
+        ->name('classmanagement.set-time');
+    Route::get('/classmanagement/{classmanagement}/schedule', [ClassManagementController::class, 'getSchedule'])
+        ->name('classmanagement.schedule');
+    Route::get('/classmanagement/{classmanagement}/can-start-lesson', [ClassManagementController::class, 'canStartLessonPlan'])
+        ->name('classmanagement.can-start-lesson');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/schedule', function () {
         return Inertia::render('Schedule/Index');

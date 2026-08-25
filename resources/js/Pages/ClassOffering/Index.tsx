@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     Plus, Search, Eye, Pencil, Trash2, X,
     Users, Clock, Calendar, CheckCircle, XCircle,
-    UserCheck, UserX, AlertCircle, Bell
+    UserCheck, UserX, AlertCircle, Bell, Trash
 } from 'lucide-react';
 
 interface Course {
@@ -13,12 +13,20 @@ interface Course {
     description: string | null;
 }
 
+interface Preference {
+    index: number;
+    day: string;
+    time: string;
+    label: string;
+}
+
 interface AppliedTeacher {
     id: number;
     teacher_id: number;
     teacher_name: string;
     status: string;
     applied_at: string;
+    selected_preference: number | null;
 }
 
 interface AcceptedTeacher {
@@ -26,6 +34,7 @@ interface AcceptedTeacher {
     teacher_id: number;
     teacher_name: string;
     approved_at: string;
+    selected_preference: number | null;
 }
 
 interface Offering {
@@ -44,10 +53,12 @@ interface Offering {
     note: string;
     is_archived: boolean;
     is_expired: boolean;
+    preferences: Preference[];
     applied_teachers: AppliedTeacher[];
     accepted_teacher: AcceptedTeacher | null;
     has_applied: boolean;
     application_status: string | null;
+    selected_preference: number | null;
     can_apply: boolean;
 }
 
@@ -79,6 +90,11 @@ const ClassOfferingIndex = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [expandedOffering, setExpandedOffering] = useState<number | null>(null);
 
+    // Form state untuk preferences
+    const [preferences, setPreferences] = useState<{ day: string; time: string }[]>([
+        { day: '', time: '' }
+    ]);
+
     const [formData, setFormData] = useState({
         course_id: '',
         type: '',
@@ -90,7 +106,16 @@ const ClassOfferingIndex = ({
         close_offering: '',
         note: '',
         is_archived: false,
+        has_deadline: false,
     });
+
+    // Days and times options
+    const days = [
+        'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+        'Friday', 'Saturday', 'Sunday'
+    ];
+
+    const times = ['Morning', 'Afternoon', 'Evening', 'Night'];
 
     // Filter offerings
     const filteredOfferings = offerings.filter((item) => {
@@ -100,6 +125,7 @@ const ClassOfferingIndex = ({
         return matchesSearch && matchesCourse && matchesArchive;
     });
 
+    // --- Form Handlers ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
         setFormData({
@@ -108,6 +134,26 @@ const ClassOfferingIndex = ({
         });
     };
 
+    const handlePreferenceChange = (index: number, field: 'day' | 'time', value: string) => {
+        const newPreferences = [...preferences];
+        newPreferences[index][field] = value;
+        setPreferences(newPreferences);
+    };
+
+    const addPreference = () => {
+        setPreferences([...preferences, { day: '', time: '' }]);
+    };
+
+    const removePreference = (index: number) => {
+        if (preferences.length <= 1) {
+            alert('You need at least one preference.');
+            return;
+        }
+        const newPreferences = preferences.filter((_, i) => i !== index);
+        setPreferences(newPreferences);
+    };
+
+    // --- Modal Open/Close ---
     const openCreateModal = () => {
         setIsEditMode(false);
         setEditId(null);
@@ -122,7 +168,9 @@ const ClassOfferingIndex = ({
             close_offering: '',
             note: '',
             is_archived: false,
+            has_deadline: false,
         });
+        setPreferences([{ day: '', time: '' }]);
         setIsModalOpen(true);
     };
 
@@ -140,7 +188,15 @@ const ClassOfferingIndex = ({
             close_offering: offering.close_offering || '',
             note: offering.note || '',
             is_archived: offering.is_archived,
+            has_deadline: !!offering.close_offering,
         });
+        
+        // Set preferences dari data yang ada
+        if (offering.preferences && offering.preferences.length > 0) {
+            setPreferences(offering.preferences.map(p => ({ day: p.day, time: p.time })));
+        } else {
+            setPreferences([{ day: '', time: '' }]);
+        }
         setIsModalOpen(true);
     };
 
@@ -152,9 +208,18 @@ const ClassOfferingIndex = ({
         }
     };
 
+    // --- Submit ---
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+
+        // Validate preferences
+        const validPreferences = preferences.filter(p => p.day && p.time);
+        if (validPreferences.length === 0) {
+            alert('Please add at least one valid preference (day and time).');
+            setIsSubmitting(false);
+            return;
+        }
 
         const submitData = {
             ...formData,
@@ -163,6 +228,8 @@ const ClassOfferingIndex = ({
             order: parseInt(formData.order),
             student: formData.student ? parseInt(formData.student) : 0,
             is_archived: formData.is_archived,
+            preferences: validPreferences,
+            has_deadline: formData.has_deadline,
         };
 
         if (isEditMode && editId) {
@@ -188,9 +255,36 @@ const ClassOfferingIndex = ({
         }
     };
 
+    // --- Actions ---
     const handleApply = (offeringId: number) => {
-        if (confirm('Are you sure you want to apply for this offering?')) {
-            router.post(`/classoffering/${offeringId}/apply`);
+        // Cek apakah offering punya preferences
+        const offering = offerings.find(o => o.id === offeringId);
+        if (!offering || !offering.preferences || offering.preferences.length === 0) {
+            alert('No preferences available for this offering.');
+            return;
+        }
+
+        // Tampilkan pilihan preferensi ke teacher
+        const preferenceOptions = offering.preferences.map((p, index) => 
+            `${index + 1}. ${p.day} - ${p.time}`
+        ).join('\n');
+
+        const selected = prompt(
+            `Select your preferred schedule:\n${preferenceOptions}\n\nEnter the number (1-${offering.preferences.length}):`
+        );
+
+        if (selected === null) return; // Cancel
+
+        const selectedIndex = parseInt(selected) - 1;
+        if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= offering.preferences.length) {
+            alert('Invalid selection. Please try again.');
+            return;
+        }
+
+        if (confirm(`Are you sure you want to apply for this offering with preference: ${offering.preferences[selectedIndex].day} - ${offering.preferences[selectedIndex].time}?`)) {
+            router.post(`/classoffering/${offeringId}/apply`, {
+                selected_preference: selectedIndex
+            });
         }
     };
 
@@ -216,6 +310,7 @@ const ClassOfferingIndex = ({
         setExpandedOffering(expandedOffering === id ? null : id);
     };
 
+    // --- Helper Functions ---
     const getTypeBadge = (type: string) => {
         const styles = {
             trial: 'bg-purple-100 text-purple-700',
@@ -225,13 +320,27 @@ const ClassOfferingIndex = ({
         return styles[type as keyof typeof styles] || 'bg-gray-100 text-gray-700';
     };
 
-    const getStatusBadge = (status: string) => {
-        const styles = {
-            pending: 'bg-yellow-100 text-yellow-700',
-            accepted: 'bg-green-100 text-green-700',
-            rejected: 'bg-red-100 text-red-700',
+    const getDayLabel = (day: string) => {
+        const map: Record<string, string> = {
+            'Monday': 'Senin',
+            'Tuesday': 'Selasa',
+            'Wednesday': 'Rabu',
+            'Thursday': 'Kamis',
+            'Friday': 'Jumat',
+            'Saturday': 'Sabtu',
+            'Sunday': 'Minggu'
         };
-        return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-700';
+        return map[day] || day;
+    };
+
+    const getTimeLabel = (time: string) => {
+        const map: Record<string, string> = {
+            'Morning': 'Pagi',
+            'Afternoon': 'Siang',
+            'Evening': 'Sore',
+            'Night': 'Malam'
+        };
+        return map[time] || time;
     };
 
     return (
@@ -242,7 +351,6 @@ const ClassOfferingIndex = ({
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <div className="flex items-center gap-3">
                             <h2 className="text-2xl font-bold text-gray-800">Class Offering</h2>
-
                         </div>
                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
                             <select
@@ -376,10 +484,19 @@ const ClassOfferingIndex = ({
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <p className="text-gray-400 font-medium text-sm">Schedule</p>
-                                            <p className="text-gray-700 font-medium">{offering.schedule_display}</p>
-                                        </div>
+                                        {/* Preferences */}
+                                        {offering.preferences && offering.preferences.length > 0 && (
+                                            <div>
+                                                <p className="text-gray-400 font-medium text-sm">Available Preferences</p>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {offering.preferences.map((pref, idx) => (
+                                                        <span key={idx} className="bg-gray-100 px-2 py-0.5 rounded text-xs text-gray-600">
+                                                            {getDayLabel(pref.day)} - {getTimeLabel(pref.time)}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div>
                                             <p className="text-gray-400 font-medium text-sm">Close Offering</p>
@@ -405,6 +522,12 @@ const ClassOfferingIndex = ({
                                                             (approved {offering.accepted_teacher.approved_at})
                                                         </span>
                                                     </p>
+                                                    {offering.accepted_teacher.selected_preference !== null && 
+                                                     offering.preferences[offering.accepted_teacher.selected_preference] && (
+                                                        <p className="text-xs text-green-500">
+                                                            Preference: {getDayLabel(offering.preferences[offering.accepted_teacher.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.accepted_teacher.selected_preference].time)}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -423,6 +546,12 @@ const ClassOfferingIndex = ({
                                                         {offering.application_status === 'pending' && '⏳ Waiting for approval...'}
                                                         {offering.application_status === 'accepted' && '✅ Accepted!'}
                                                         {offering.application_status === 'rejected' && '❌ Rejected'}
+                                                        {offering.selected_preference !== null && 
+                                                         offering.preferences[offering.selected_preference] && (
+                                                            <span className="block text-xs mt-1 text-gray-500">
+                                                                Preference: {getDayLabel(offering.preferences[offering.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.selected_preference].time)}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ) : offering.can_apply ? (
                                                     <button
@@ -452,28 +581,38 @@ const ClassOfferingIndex = ({
 
                                                 {expandedOffering === offering.id && (
                                                     <div className="mt-3 space-y-3">
-                                                        {offering.applied_teachers.map((teacher) => (
-                                                            <div key={teacher.id} className="bg-gray-50 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-gray-800">{teacher.teacher_name}</p>
-                                                                    <p className="text-xs text-gray-400">Applied: {teacher.applied_at}</p>
+                                                        {offering.applied_teachers.map((teacher) => {
+                                                            const pref = teacher.selected_preference !== null 
+                                                                ? offering.preferences[teacher.selected_preference]
+                                                                : null;
+                                                            return (
+                                                                <div key={teacher.id} className="bg-gray-50 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                                                    <div className="flex-1">
+                                                                        <p className="font-medium text-gray-800">{teacher.teacher_name}</p>
+                                                                        <p className="text-xs text-gray-400">Applied: {teacher.applied_at}</p>
+                                                                        {pref && (
+                                                                            <p className="text-xs text-emerald-600">
+                                                                                Preferred: {getDayLabel(pref.day)} - {getTimeLabel(pref.time)}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex gap-2 w-full sm:w-auto">
+                                                                        <button
+                                                                            onClick={() => handleApprove(offering.id, teacher.id)}
+                                                                            className="flex-1 sm:flex-none px-4 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition flex items-center justify-center gap-1"
+                                                                        >
+                                                                            <CheckCircle size={14} /> Approve
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleReject(offering.id, teacher.id)}
+                                                                            className="flex-1 sm:flex-none px-4 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition flex items-center justify-center gap-1"
+                                                                        >
+                                                                            <XCircle size={14} /> Reject
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex gap-2 w-full sm:w-auto">
-                                                                    <button
-                                                                        onClick={() => handleApprove(offering.id, teacher.id)}
-                                                                        className="flex-1 sm:flex-none px-4 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition flex items-center justify-center gap-1"
-                                                                    >
-                                                                        <CheckCircle size={14} /> Approve
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleReject(offering.id, teacher.id)}
-                                                                        className="flex-1 sm:flex-none px-4 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition flex items-center justify-center gap-1"
-                                                                    >
-                                                                        <XCircle size={14} /> Reject
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
@@ -511,6 +650,7 @@ const ClassOfferingIndex = ({
 
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="space-y-4">
+                                {/* Course */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Course <span className="text-red-500">*</span>
@@ -531,6 +671,7 @@ const ClassOfferingIndex = ({
                                     </select>
                                 </div>
 
+                                {/* Class Type */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Class Type <span className="text-red-500">*</span>
@@ -549,6 +690,7 @@ const ClassOfferingIndex = ({
                                     </select>
                                 </div>
 
+                                {/* Level, Period, Order, Student */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -610,35 +752,96 @@ const ClassOfferingIndex = ({
                                     </div>
                                 </div>
 
+                                {/* Preferences - Hari & Waktu */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Schedule <span className="text-red-500">*</span>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Schedule Preferences <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="datetime-local"
-                                        name="schedule_at"
-                                        value={formData.schedule_at}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    />
+                                    <p className="text-xs text-gray-400 mb-3">Add one or more schedule preferences</p>
+                                    
+                                    {preferences.map((pref, index) => (
+                                        <div key={index} className="flex gap-2 mb-2 items-end">
+                                            <div className="flex-1">
+                                                <select
+                                                    value={pref.day}
+                                                    onChange={(e) => handlePreferenceChange(index, 'day', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                    required
+                                                >
+                                                    <option value="">Select Day</option>
+                                                    {days.map((day) => (
+                                                        <option key={day} value={day}>{getDayLabel(day)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex-1">
+                                                <select
+                                                    value={pref.time}
+                                                    onChange={(e) => handlePreferenceChange(index, 'time', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                    required
+                                                >
+                                                    <option value="">Select Time</option>
+                                                    {times.map((time) => (
+                                                        <option key={time} value={time}>{getTimeLabel(time)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removePreference(index)}
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition flex-shrink-0"
+                                                title="Remove preference"
+                                            >
+                                                <Trash size={18} />
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    <button
+                                        type="button"
+                                        onClick={addPreference}
+                                        className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1 mt-2"
+                                    >
+                                        <Plus size={16} /> Add Preference
+                                    </button>
                                 </div>
 
+                                {/* Schedule & Deadline */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Close Offering <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="datetime-local"
-                                        name="close_offering"
-                                        value={formData.close_offering}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    />
-                                    <p className="text-xs text-gray-400 mt-1">Must be before schedule date</p>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <input
+                                            type="checkbox"
+                                            id="has_deadline"
+                                            name="has_deadline"
+                                            checked={formData.has_deadline}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 text-emerald-500 focus:ring-emerald-500 border-gray-300 rounded"
+                                        />
+                                        <label htmlFor="has_deadline" className="text-sm font-medium text-gray-700">
+                                            Add Deadline
+                                        </label>
+                                    </div>
+
+                                    {formData.has_deadline && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Close Offering <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="datetime-local"
+                                                name="close_offering"
+                                                value={formData.close_offering}
+                                                onChange={handleInputChange}
+                                                required={formData.has_deadline}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">Teachers can apply until this date</p>
+                                        </div>
+                                    )}
                                 </div>
 
+                                {/* Note */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Note
@@ -653,6 +856,7 @@ const ClassOfferingIndex = ({
                                     />
                                 </div>
 
+                                {/* Archived (Admin only) */}
                                 {isAdmin && (
                                     <div className="flex items-center gap-2">
                                         <input
@@ -670,6 +874,7 @@ const ClassOfferingIndex = ({
                                 )}
                             </div>
 
+                            {/* Footer */}
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                                 <button
                                     type="button"

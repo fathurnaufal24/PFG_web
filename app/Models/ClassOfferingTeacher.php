@@ -16,10 +16,12 @@ class ClassOfferingTeacher extends Model
         'teacher_id',
         'status',
         'approved_at',
+        'selected_preference', // Tambahkan: index preferensi yang dipilih teacher
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
+        'selected_preference' => 'integer',
     ];
 
     public function classOffering()

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassManagement;
+use App\Models\ClassSchedule;
 use App\Models\Course;
 use App\Models\LessonPlan;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -242,5 +244,88 @@ class ClassManagementController extends Controller
 
         return redirect()->route('classmanagement')
             ->with('success', 'Lesson plan created successfully! Class status updated to Active.');
+    }
+    /**
+     * Set time schedule for a class (Admin only)
+     * Generate 10 weekly meetings
+     */
+    public function setTime(Request $request, ClassManagement $classmanagement)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'start_date' => 'required|date|after:now',
+            'start_time' => 'required|date_format:H:i',
+            'meeting_count' => 'nullable|integer|min:1|max:20',
+            'start_this_week' => 'boolean',
+        ]);
+
+        // Hapus schedules lama jika ada
+        $classmanagement->schedules()->delete();
+
+        $startDate = Carbon::parse($validated['start_date']);
+        $startTime = $validated['start_time'];
+        $meetingCount = $validated['meeting_count'] ?? 10;
+
+        // Parse time
+        [$hour, $minute] = explode(':', $startTime);
+
+        // Generate schedules
+        $schedules = [];
+        for ($i = 0; $i < $meetingCount; $i++) {
+            $meetingDate = $startDate->copy()->addWeeks($i);
+            $meetingDate->setTime($hour, $minute, 0);
+
+            $schedules[] = [
+                'class_management_id' => $classmanagement->id,
+                'meeting_number' => $i + 1,
+                'schedule_at' => $meetingDate,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        ClassSchedule::insert($schedules);
+
+        // Update class management schedule_at (first meeting)
+        $classmanagement->update([
+            'schedule_at' => $schedules[0]['schedule_at'],
+        ]);
+
+        return redirect()->route('classmanagement')
+            ->with('success', "{$meetingCount} weekly meeting schedules created successfully!");
+    }
+
+    /**
+     * Get schedule for a class
+     */
+    public function getSchedule(ClassManagement $classmanagement)
+    {
+        $schedules = $classmanagement->schedules()
+            ->orderBy('meeting_number')
+            ->get();
+
+        return response()->json([
+            'schedules' => $schedules,
+            'preferred_day' => $classmanagement->preferred_day,
+            'preferred_time' => $classmanagement->preferred_time,
+        ]);
+    }
+
+    /**
+     * Check if class can start lesson plan
+     */
+    public function canStartLessonPlan(ClassManagement $classmanagement)
+    {
+        $hasSchedule = $classmanagement->schedules()->count() > 0;
+        $hasLessonPlan = $classmanagement->lessonPlan()->exists();
+
+        return response()->json([
+            'can_start' => $hasSchedule && !$hasLessonPlan,
+            'has_schedule' => $hasSchedule,
+            'has_lesson_plan' => $hasLessonPlan,
+        ]);
     }
 }

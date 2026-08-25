@@ -20,24 +20,19 @@ class ClassOfferingController extends Controller
         $isAdmin = $user->role === 'admin';
         $teacherId = $user->teacher?->id;
 
-        // Auto archive: check close_offering yang sudah lewat
         $this->autoArchiveOfferings();
 
         $query = ClassOffering::with(['course', 'teacherApplications.teacher.user']);
 
-        // Filter berdasarkan role
         if ($isAdmin) {
-            // Admin melihat semua offering
             $offerings = $query->orderBy('created_at', 'desc')->get();
         } else {
-            // Teacher hanya melihat offering yang available (is_archived = false)
             $offerings = $query->where('is_archived', false)
                 ->where('close_offering', '>', now())
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
 
-        // Map data untuk frontend
         $mappedOfferings = $offerings->map(function ($offering) use ($isAdmin, $teacherId) {
             $appliedTeachers = $offering->teacherApplications()
                 ->where('status', 'pending')
@@ -49,9 +44,10 @@ class ClassOfferingController extends Controller
                 ->with('teacher.user')
                 ->first();
 
-            // Cek apakah teacher sudah apply
             $hasApplied = false;
             $applicationStatus = null;
+            $selectedPreference = null;
+            
             if (!$isAdmin && $teacherId) {
                 $application = $offering->teacherApplications()
                     ->where('teacher_id', $teacherId)
@@ -59,6 +55,20 @@ class ClassOfferingController extends Controller
                 if ($application) {
                     $hasApplied = true;
                     $applicationStatus = $application->status;
+                    $selectedPreference = $application->selected_preference;
+                }
+            }
+
+            // Parse preferences
+            $preferences = [];
+            if ($offering->preferences) {
+                foreach ($offering->preferences as $index => $pref) {
+                    $preferences[] = [
+                        'index' => $index,
+                        'day' => $pref['day'] ?? '',
+                        'time' => $pref['time'] ?? '',
+                        'label' => $pref['day'] . ' ' . $pref['time'],
+                    ];
                 }
             }
 
@@ -78,6 +88,7 @@ class ClassOfferingController extends Controller
                 'note' => $offering->note,
                 'is_archived' => $offering->is_archived,
                 'is_expired' => $offering->close_offering < now(),
+                'preferences' => $preferences,
                 'applied_teachers' => $appliedTeachers->map(function ($application) {
                     return [
                         'id' => $application->id,
@@ -85,6 +96,7 @@ class ClassOfferingController extends Controller
                         'teacher_name' => $application->teacher->first_name . ' ' . ($application->teacher->last_name ?? ''),
                         'status' => $application->status,
                         'applied_at' => $application->created_at?->format('d F Y H:i'),
+                        'selected_preference' => $application->selected_preference,
                     ];
                 }),
                 'accepted_teacher' => $acceptedTeacher ? [
@@ -92,17 +104,17 @@ class ClassOfferingController extends Controller
                     'teacher_id' => $acceptedTeacher->teacher_id,
                     'teacher_name' => $acceptedTeacher->teacher->first_name . ' ' . ($acceptedTeacher->teacher->last_name ?? ''),
                     'approved_at' => $acceptedTeacher->approved_at?->format('d F Y H:i'),
+                    'selected_preference' => $acceptedTeacher->selected_preference,
                 ] : null,
                 'has_applied' => $hasApplied,
                 'application_status' => $applicationStatus,
+                'selected_preference' => $selectedPreference,
                 'can_apply' => !$isAdmin && !$hasApplied && !$offering->is_archived && $offering->close_offering > now(),
             ];
         });
 
-        // Ambil courses untuk filter & dropdown
         $courses = Course::all(['id', 'subject', 'description']);
 
-        // Hitung notifikasi unread untuk badge (hanya untuk teacher)
         $unreadCount = 0;
         if (!$isAdmin) {
             $unreadCount = Notification::where('user_id', $user->id)
@@ -123,7 +135,6 @@ class ClassOfferingController extends Controller
 
     private function autoArchiveOfferings()
     {
-        // Archive offering yang close_offering-nya sudah lewat
         ClassOffering::where('is_archived', false)
             ->where('close_offering', '<', now())
             ->update(['is_archived' => true]);
@@ -143,13 +154,23 @@ class ClassOfferingController extends Controller
             'type' => 'required|string|in:trial,regular,private',
             'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
-            'close_offering' => 'required|date|after:now',
+            'close_offering' => 'nullable|date|after:now',
             'note' => 'nullable|string',
             'is_archived' => 'boolean',
+            'preferences' => 'required|array|min:1',
+            'preferences.*.day' => 'required|string',
+            'preferences.*.time' => 'required|string',
+            'has_deadline' => 'boolean',
         ]);
 
-        // Validasi close_offering harus sebelum schedule_at
-        if ($validated['schedule_at'] && $validated['close_offering'] >= $validated['schedule_at']) {
+        // Validasi jika ada deadline
+        if ($request->has_deadline && !$validated['close_offering']) {
+            return back()->withErrors([
+                'close_offering' => 'Please set a deadline date.',
+            ]);
+        }
+
+        if ($validated['schedule_at'] && $validated['close_offering'] && $validated['close_offering'] >= $validated['schedule_at']) {
             return back()->withErrors([
                 'close_offering' => 'Close offering must be before schedule date.',
             ]);
@@ -157,6 +178,8 @@ class ClassOfferingController extends Controller
 
         $validated['curriculum_id'] = auth()->user()->curriculum->id ?? 1;
         $validated['is_archived'] = $validated['is_archived'] ?? false;
+        $validated['close_offering'] = $request->has_deadline ? $validated['close_offering'] : null;
+        $validated['preferences'] = $validated['preferences'];
 
         ClassOffering::create($validated);
 
@@ -178,16 +201,28 @@ class ClassOfferingController extends Controller
             'type' => 'required|string|in:trial,regular,private',
             'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
-            'close_offering' => 'required|date',
+            'close_offering' => 'nullable|date',
             'note' => 'nullable|string',
             'is_archived' => 'boolean',
+            'preferences' => 'required|array|min:1',
+            'preferences.*.day' => 'required|string',
+            'preferences.*.time' => 'required|string',
+            'has_deadline' => 'boolean',
         ]);
 
-        if ($validated['schedule_at'] && $validated['close_offering'] >= $validated['schedule_at']) {
+        if ($request->has_deadline && !$validated['close_offering']) {
+            return back()->withErrors([
+                'close_offering' => 'Please set a deadline date.',
+            ]);
+        }
+
+        if ($validated['schedule_at'] && $validated['close_offering'] && $validated['close_offering'] >= $validated['schedule_at']) {
             return back()->withErrors([
                 'close_offering' => 'Close offering must be before schedule date.',
             ]);
         }
+
+        $validated['close_offering'] = $request->has_deadline ? $validated['close_offering'] : null;
 
         $classOffering->update($validated);
 
@@ -201,7 +236,6 @@ class ClassOfferingController extends Controller
             abort(403);
         }
 
-        // Hapus semua aplikasi terkait
         $classOffering->teacherApplications()->delete();
         $classOffering->delete();
 
@@ -221,6 +255,10 @@ class ClassOfferingController extends Controller
         if (!$teacherId) {
             return back()->withErrors(['error' => 'Teacher profile not found.']);
         }
+
+        $validated = $request->validate([
+            'selected_preference' => 'required|integer|min:0',
+        ]);
 
         // Cek apakah offering masih available
         if ($classOffering->is_archived || $classOffering->close_offering < now()) {
@@ -249,6 +287,7 @@ class ClassOfferingController extends Controller
             'teacher_id' => $teacherId,
             'status' => 'pending',
             'approved_at' => null,
+            'selected_preference' => $validated['selected_preference'],
         ]);
 
         return redirect()->route('classoffering')
@@ -279,7 +318,6 @@ class ClassOfferingController extends Controller
             ->get();
 
         foreach ($rejectedApplications as $rejected) {
-            // Kirim notifikasi reject ke teacher yang ditolak
             Notification::create([
                 'user_id' => $rejected->teacher->user_id,
                 'type' => 'class_offering_rejected',
@@ -302,8 +340,11 @@ class ClassOfferingController extends Controller
             'read' => false,
         ]);
 
-        // Create class management
-        ClassManagement::create([
+        // Create class management dengan preferences yang dipilih teacher
+        $preferences = $classOffering->preferences ?? [];
+        $selectedPref = $preferences[$application->selected_preference] ?? null;
+
+        $classManagement = ClassManagement::create([
             'course_id' => $classOffering->course_id,
             'teacher_id' => $application->teacher_id,
             'level' => $classOffering->level,
@@ -315,6 +356,8 @@ class ClassOfferingController extends Controller
             'note' => $classOffering->note,
             'session' => 0,
             'status' => 'inactive',
+            'preferred_day' => $selectedPref['day'] ?? null, // Tambahkan field di migration
+            'preferred_time' => $selectedPref['time'] ?? null, // Tambahkan field di migration
         ]);
 
         // Archive offering
@@ -337,7 +380,6 @@ class ClassOfferingController extends Controller
 
         $teacher = $application->teacher;
 
-        // Kirim notifikasi reject
         Notification::create([
             'user_id' => $teacher->user_id,
             'type' => 'class_offering_rejected',
@@ -347,7 +389,6 @@ class ClassOfferingController extends Controller
             'read' => false,
         ]);
 
-        // Delete application
         $application->delete();
 
         return redirect()->route('classoffering')
