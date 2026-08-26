@@ -28,7 +28,10 @@ class ClassOfferingController extends Controller
             $offerings = $query->orderBy('created_at', 'desc')->get();
         } else {
             $offerings = $query->where('is_archived', false)
-                ->where('close_offering', '>', now())
+                ->where(function ($q) {
+                    $q->where('close_offering', '>', now())
+                        ->orWhereNull('close_offering');
+                })
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -47,7 +50,7 @@ class ClassOfferingController extends Controller
             $hasApplied = false;
             $applicationStatus = null;
             $selectedPreference = null;
-            
+
             if (!$isAdmin && $teacherId) {
                 $application = $offering->teacherApplications()
                     ->where('teacher_id', $teacherId)
@@ -87,7 +90,7 @@ class ClassOfferingController extends Controller
                 'close_offering_display' => $offering->close_offering?->format('l, d F Y (H.i WIB)') ?? '-',
                 'note' => $offering->note,
                 'is_archived' => $offering->is_archived,
-                'is_expired' => $offering->close_offering < now(),
+                'is_expired' => $offering->close_offering ? $offering->close_offering < now() : false,
                 'preferences' => $preferences,
                 'applied_teachers' => $appliedTeachers->map(function ($application) {
                     return [
@@ -109,7 +112,10 @@ class ClassOfferingController extends Controller
                 'has_applied' => $hasApplied,
                 'application_status' => $applicationStatus,
                 'selected_preference' => $selectedPreference,
-                'can_apply' => !$isAdmin && !$hasApplied && !$offering->is_archived && $offering->close_offering > now(),
+                'can_apply' => !$isAdmin
+                    && !$hasApplied
+                    && !$offering->is_archived
+                    && ($offering->close_offering === null || $offering->close_offering > now()),
             ];
         });
 
@@ -246,7 +252,7 @@ class ClassOfferingController extends Controller
     public function apply(Request $request, ClassOffering $classOffering)
     {
         $user = auth()->user();
-        
+
         if ($user->role !== 'teacher') {
             abort(403);
         }

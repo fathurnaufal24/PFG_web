@@ -121,7 +121,14 @@ const ClassOfferingIndex = ({
     const filteredOfferings = offerings.filter((item) => {
         const matchesSearch = item.subject.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCourse = selectedCourse ? item.course_id === parseInt(selectedCourse) : true;
-        const matchesArchive = showArchived ? true : !item.is_archived && !item.is_expired;
+
+        // Sekarang logikanya benar:
+        // - showArchived = false → tampilkan yang aktif (tidak archived dan tidak expired)
+        // - showArchived = true → tampilkan yang archived atau expired
+        const matchesArchive = showArchived
+            ? item.is_archived || item.is_expired
+            : !item.is_archived && !item.is_expired;
+
         return matchesSearch && matchesCourse && matchesArchive;
     });
 
@@ -190,7 +197,7 @@ const ClassOfferingIndex = ({
             is_archived: offering.is_archived,
             has_deadline: !!offering.close_offering,
         });
-        
+
         // Set preferences dari data yang ada
         if (offering.preferences && offering.preferences.length > 0) {
             setPreferences(offering.preferences.map(p => ({ day: p.day, time: p.time })));
@@ -213,7 +220,6 @@ const ClassOfferingIndex = ({
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Validate preferences
         const validPreferences = preferences.filter(p => p.day && p.time);
         if (validPreferences.length === 0) {
             alert('Please add at least one valid preference (day and time).');
@@ -230,6 +236,7 @@ const ClassOfferingIndex = ({
             is_archived: formData.is_archived,
             preferences: validPreferences,
             has_deadline: formData.has_deadline,
+            note: formData.note || null, // <-- TAMBAHKAN INI, kirim null jika kosong
         };
 
         if (isEditMode && editId) {
@@ -265,7 +272,7 @@ const ClassOfferingIndex = ({
         }
 
         // Tampilkan pilihan preferensi ke teacher
-        const preferenceOptions = offering.preferences.map((p, index) => 
+        const preferenceOptions = offering.preferences.map((p, index) =>
             `${index + 1}. ${p.day} - ${p.time}`
         ).join('\n');
 
@@ -369,11 +376,10 @@ const ClassOfferingIndex = ({
                                 <>
                                     <button
                                         onClick={() => setShowArchived(!showArchived)}
-                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                                            showArchived
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${showArchived
+                                            ? 'bg-emerald-100 text-emerald-700'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            }`}
                                     >
                                         {showArchived ? 'Showing Archived' : 'Show Archived'}
                                     </button>
@@ -412,9 +418,8 @@ const ClassOfferingIndex = ({
                             {filteredOfferings.map((offering) => (
                                 <div
                                     key={offering.id}
-                                    className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition ${
-                                        offering.is_archived || offering.is_expired ? 'opacity-75' : ''
-                                    }`}
+                                    className={`bg-white border rounded-2xl shadow-sm overflow-hidden transition ${offering.is_archived || offering.is_expired ? 'opacity-75' : ''
+                                        }`}
                                 >
                                     {/* Card Header */}
                                     <div className="p-6 border-b border-gray-100">
@@ -522,12 +527,12 @@ const ClassOfferingIndex = ({
                                                             (approved {offering.accepted_teacher.approved_at})
                                                         </span>
                                                     </p>
-                                                    {offering.accepted_teacher.selected_preference !== null && 
-                                                     offering.preferences[offering.accepted_teacher.selected_preference] && (
-                                                        <p className="text-xs text-green-500">
-                                                            Preference: {getDayLabel(offering.preferences[offering.accepted_teacher.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.accepted_teacher.selected_preference].time)}
-                                                        </p>
-                                                    )}
+                                                    {offering.accepted_teacher.selected_preference !== null &&
+                                                        offering.preferences[offering.accepted_teacher.selected_preference] && (
+                                                            <p className="text-xs text-green-500">
+                                                                Preference: {getDayLabel(offering.preferences[offering.accepted_teacher.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.accepted_teacher.selected_preference].time)}
+                                                            </p>
+                                                        )}
                                                 </div>
                                             </div>
                                         )}
@@ -536,22 +541,21 @@ const ClassOfferingIndex = ({
                                         {!isAdmin && (
                                             <div className="pt-4 border-t border-gray-100">
                                                 {offering.has_applied ? (
-                                                    <div className={`px-4 py-2 rounded-xl text-sm font-medium text-center ${
-                                                        offering.application_status === 'pending'
-                                                            ? 'bg-yellow-50 text-yellow-700'
-                                                            : offering.application_status === 'accepted'
-                                                                ? 'bg-green-50 text-green-700'
-                                                                : 'bg-red-50 text-red-700'
-                                                    }`}>
+                                                    <div className={`px-4 py-2 rounded-xl text-sm font-medium text-center ${offering.application_status === 'pending'
+                                                        ? 'bg-yellow-50 text-yellow-700'
+                                                        : offering.application_status === 'accepted'
+                                                            ? 'bg-green-50 text-green-700'
+                                                            : 'bg-red-50 text-red-700'
+                                                        }`}>
                                                         {offering.application_status === 'pending' && '⏳ Waiting for approval...'}
                                                         {offering.application_status === 'accepted' && '✅ Accepted!'}
                                                         {offering.application_status === 'rejected' && '❌ Rejected'}
-                                                        {offering.selected_preference !== null && 
-                                                         offering.preferences[offering.selected_preference] && (
-                                                            <span className="block text-xs mt-1 text-gray-500">
-                                                                Preference: {getDayLabel(offering.preferences[offering.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.selected_preference].time)}
-                                                            </span>
-                                                        )}
+                                                        {offering.selected_preference !== null &&
+                                                            offering.preferences[offering.selected_preference] && (
+                                                                <span className="block text-xs mt-1 text-gray-500">
+                                                                    Preference: {getDayLabel(offering.preferences[offering.selected_preference].day)} - {getTimeLabel(offering.preferences[offering.selected_preference].time)}
+                                                                </span>
+                                                            )}
                                                     </div>
                                                 ) : offering.can_apply ? (
                                                     <button
@@ -582,7 +586,7 @@ const ClassOfferingIndex = ({
                                                 {expandedOffering === offering.id && (
                                                     <div className="mt-3 space-y-3">
                                                         {offering.applied_teachers.map((teacher) => {
-                                                            const pref = teacher.selected_preference !== null 
+                                                            const pref = teacher.selected_preference !== null
                                                                 ? offering.preferences[teacher.selected_preference]
                                                                 : null;
                                                             return (
@@ -758,7 +762,7 @@ const ClassOfferingIndex = ({
                                         Schedule Preferences <span className="text-red-500">*</span>
                                     </label>
                                     <p className="text-xs text-gray-400 mb-3">Add one or more schedule preferences</p>
-                                    
+
                                     {preferences.map((pref, index) => (
                                         <div key={index} className="flex gap-2 mb-2 items-end">
                                             <div className="flex-1">
