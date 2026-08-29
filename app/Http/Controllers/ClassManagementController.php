@@ -16,7 +16,8 @@ class ClassManagementController extends Controller
     {
         $user = auth()->user();
 
-        $query = ClassManagement::with(['course', 'teacher.user']);
+        // LOAD RELASI SCHEDULES
+        $query = ClassManagement::with(['course', 'teacher.user', 'schedules']);
 
         if ($user->role !== 'admin') {
             if ($user->teacher) {
@@ -52,12 +53,12 @@ class ClassManagementController extends Controller
 
             return [
                 'id' => $class->id,
-                'course_id' => $class->course_id, // Tambahkan ini
+                'course_id' => $class->course_id,
                 'subject' => $subject,
                 'level' => $class->level ?? 0,
                 'type' => $class->type ?? '-',
-                'period' => $class->period ?? '', // Tambahkan ini
-                'order' => $class->order ?? 1, // Tambahkan ini
+                'period' => $class->period ?? '',
+                'order' => $class->order ?? 1,
                 'session' => $class->session ?? 0,
                 'schedule' => $schedule,
                 'schedule_at' => $class->schedule_at ? $class->schedule_at->format('Y-m-d\TH:i') : null,
@@ -68,8 +69,13 @@ class ClassManagementController extends Controller
                 'teacher_name' => $class->teacher ?
                     $class->teacher->first_name . ' ' . ($class->teacher->last_name ?? '') :
                     'Not Assigned',
-                'teacher_id' => $class->teacher_id, // Tambahkan ini
+                'teacher_id' => $class->teacher_id,
                 'note' => $class->note,
+                // TAMBAHKAN 3 FIELD INI:
+                'preferred_day' => $class->preferred_day,
+                'preferred_time' => $class->preferred_time,
+                'has_schedule' => $class->schedules->count() > 0,
+                'total_meetings' => $class->schedules->count(),
             ];
         });
 

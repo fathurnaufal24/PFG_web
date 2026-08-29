@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(ClassOffering::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
             $table->string('status'); // 'pending', 'accepted', 'rejected'
-            $table->integer('selected_preference')->nullable()->after('status');
+            $table->integer('selected_preference')->nullable();
             $table->dateTime('approved_at')->nullable();
             $table->timestamps();
         });

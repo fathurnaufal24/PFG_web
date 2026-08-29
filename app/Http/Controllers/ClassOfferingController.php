@@ -266,17 +266,10 @@ class ClassOfferingController extends Controller
             'selected_preference' => 'required|integer|min:0',
         ]);
 
-        // Cek apakah offering masih available
-        if ($classOffering->is_archived || $classOffering->close_offering < now()) {
+        // PERBAIKAN: Cek apakah offering masih available
+        // close_offering = null berarti tidak ada deadline (selalu available)
+        if ($classOffering->is_archived || ($classOffering->close_offering && $classOffering->close_offering < now())) {
             return back()->withErrors(['error' => 'This offering is no longer available.']);
-        }
-
-        // Cek apakah sudah ada teacher yang diterima
-        $existingAccepted = $classOffering->teacherApplications()
-            ->where('status', 'accepted')
-            ->exists();
-        if ($existingAccepted) {
-            return back()->withErrors(['error' => 'This offering has already been filled.']);
         }
 
         // Cek apakah teacher sudah apply

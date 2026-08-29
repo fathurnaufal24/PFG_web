@@ -25,8 +25,8 @@ return new class extends Migration
             $table->integer('student')->default(0);
             $table->dateTime('schedule_at')->nullable();
             $table->longText('note');
-            $table->string('preferred_day')->nullable()->after('note');
-            $table->string('preferred_time')->nullable()->after('preferred_day');
+            $table->string('preferred_day')->nullable();
+            $table->string('preferred_time')->nullable();
             $table->string('status')->default('inactive'); // ['inactive', 'active', 'report', 'pm', 'ended']
             $table->boolean('planned')->default(false);
             $table->timestamps();

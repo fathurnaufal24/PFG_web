@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('student')->default(0);
             $table->dateTime('schedule_at')->nullable();
             $table->longText('note')->nullable();
-            $table->json('preferences')->nullable()->after('note');
+            $table->json('preferences')->nullable();
             $table->boolean('is_archived')->default(true);
             $table->dateTime('close_offering')->nullable();
             $table->timestamps();
