@@ -50,6 +50,7 @@ interface Props {
 const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [], userRole }: Props) => {
     const [activeTab, setActiveTab] = useState("Lesson Plan");
     const [searchTerm, setSearchTerm] = useState("");
+    const [typeFilter, setTypeFilter] = useState<'all' | 'trial' | 'regular' | 'private'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
@@ -114,8 +115,9 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
 
         const matchesSearch = item.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.teacher_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = typeFilter === 'all' || item.type.toLowerCase() === typeFilter;
 
-        return matchesTab && matchesSearch;
+        return matchesTab && matchesSearch && matchesType;
     });
 
     // --- Handlers untuk Class Management ---
@@ -504,9 +506,23 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
 
                 <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
                     <div className="flex flex-col gap-4 border-b border-slate-200 bg-slate-50/80 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                        <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
                             <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
                             Showing {filteredClasses.length} classes
+                            {(['all', 'trial', 'regular', 'private'] as const).map((type) => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => setTypeFilter(type)}
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                                        typeFilter === type
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {type === 'all' ? 'All' : type}
+                                </button>
+                            ))}
                         </div>
 
                         <div className="relative w-full md:w-72">
@@ -551,7 +567,11 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                         const showSetTimeButton = isAdmin && isInactive;
 
                                         return (
-                                            <tr key={item.id} className="border-t border-slate-200 transition hover:bg-slate-50/70">
+                                            <tr
+                                                key={item.id}
+                                                className="cursor-pointer border-t border-slate-200 transition hover:bg-slate-50/70"
+                                                onClick={() => router.get(`/classmanagement/${item.id}`)}
+                                            >
                                                 <td className="p-5 font-bold text-slate-500">{index + 1}</td>
                                                 <td className="p-5">
                                                     <div className="flex items-center gap-3">
@@ -578,7 +598,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                                 <td className="p-5 text-sm text-slate-500">{item.schedule}</td>
                                                 <td className="p-5 font-medium text-slate-700">{item.students_text}</td>
                                                 <td className="p-5 text-sm text-slate-600">{item.teacher_name}</td>
-                                                <td className="p-5">
+                                                <td className="p-5" onClick={(e) => e.stopPropagation()}>
                                                     <div className="flex justify-center gap-2">
                                                         {showSetTimeButton ? (
                                                             <button

@@ -29,6 +29,10 @@ class ClassManagementController extends Controller
 
         $classManagements = $query->get()->map(function ($class) {
             $subject = $class->course ? $class->course->subject : 'N/A';
+            $subjectCode = trim(sprintf('%s – %s.%s', $subject, $class->period, $class->order));
+            if (strtolower((string) $class->type) === 'trial') {
+                $subjectCode .= ' – P1';
+            }
 
             // Format schedule
             $schedule = '-';
@@ -54,7 +58,8 @@ class ClassManagementController extends Controller
             return [
                 'id' => $class->id,
                 'course_id' => $class->course_id,
-                'subject' => $subject,
+                'subject' => $subjectCode,
+                'subject_name' => $subject,
                 'level' => $class->level ?? 0,
                 'type' => $class->type ?? '-',
                 'period' => $class->period ?? '',
@@ -175,12 +180,133 @@ class ClassManagementController extends Controller
             }
         }
 
-        $classmanagement->load(['course', 'teacher.user']);
+        $classmanagement->load(['course', 'teacher.user', 'lessonPlan', 'schedules']);
 
         return Inertia::render('ClassManagement/Show', [
-            'class' => $classmanagement,
+            'classData' => $this->classroomPayload($classmanagement),
             'canEdit' => $user->role === 'admin',
+            'userRole' => $user->role,
         ]);
+    }
+
+    /**
+     * Dummy classroom payload for Teacher Portal slides 7-12.
+     * Real persistence can replace these arrays later.
+     */
+    private function classroomPayload(ClassManagement $class): array
+    {
+        $subject = $class->course?->subject ?? 'N/A';
+        $title = trim(sprintf('%s – %s.%s', $subject, $class->period, $class->order));
+        if (strtolower((string) $class->type) === 'trial') {
+            $title .= ' – P1';
+        }
+
+        $schedule = '-';
+        if ($class->schedule_at) {
+            try {
+                $schedule = $class->schedule_at->locale('id')->translatedFormat('l, d F Y - H.i') . ' WIB';
+            } catch (\Exception $e) {
+                $schedule = $class->schedule_at->format('l, d F Y - H.i') . ' WIB';
+            }
+        }
+
+        $teacherName = $class->teacher
+            ? trim($class->teacher->first_name . ' ' . ($class->teacher->last_name ?? ''))
+            : 'Not Assigned';
+
+        $statusMap = [
+            'inactive' => 'lesson_plan',
+            'active' => 'active',
+            'report' => 'report',
+            'pm' => 'parent_meeting',
+            'ended' => 'ended',
+        ];
+
+        $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title) ?: 'class');
+
+        $lessonPlan = null;
+        if ($class->lessonPlan) {
+            $cdev = $class->lessonPlan->cdev;
+            if (is_string($cdev)) {
+                $cdev = json_decode($cdev, true) ?: [];
+            }
+
+            $lessonPlan = [
+                'cdev' => $cdev,
+                'model' => $class->lessonPlan->model,
+                'method' => $class->lessonPlan->method,
+                'purpose' => $class->lessonPlan->purpose,
+                'output' => $class->lessonPlan->output,
+                'outcome' => $class->lessonPlan->outcome,
+            ];
+        }
+
+        return [
+            'id' => $class->id,
+            'title' => $title,
+            'subject' => $subject,
+            'teacher_name' => $teacherName,
+            'schedule' => $schedule,
+            'level' => $class->level ?? 1,
+            'type' => $class->type ?? 'regular',
+            'class_link' => 'https://meet.pfg.id/' . trim($slug, '-'),
+            'room_name' => 'PFG-' . str_pad((string) $class->id, 2, '0', STR_PAD_LEFT),
+            'status' => $statusMap[$class->status] ?? 'lesson_plan',
+            'status_raw' => $class->status,
+            'main_alias' => $title,
+            'lesson_plan' => $lessonPlan,
+            'students' => [
+                ['id' => 1, 'name' => 'Muhammad Al-Fatih'],
+                ['id' => 2, 'name' => 'Reza Alfian'],
+            ],
+            'sessions' => [
+                ['id' => 1, 'label' => 'Session 1', 'datetime' => '13 Feb 2026 (19.00 WIB)'],
+                ['id' => 2, 'label' => 'Session 2', 'datetime' => '20 Feb 2026 (19.00 WIB)'],
+                ['id' => 3, 'label' => 'Session 3', 'datetime' => '27 Feb 2026 (19.00 WIB)'],
+            ],
+            'attendance' => [
+                1 => ['hadir', 'sakit', 'belum'],
+                2 => ['izin', 'tidak_hadir', 'belum'],
+            ],
+            'session_history' => [
+                [
+                    'id' => 1,
+                    'room_name' => 'PFG-10',
+                    'start' => '13 Februari 2026 – 19.01 WIB',
+                    'end' => '13 Februari 2026 – 20.11 WIB',
+                    'recording' => 'https://youtube.com',
+                ],
+                [
+                    'id' => 2,
+                    'room_name' => 'PFG-42',
+                    'start' => '20 Februari 2026 – 18.47 WIB',
+                    'end' => '20 Februari 2026 – 20.00 WIB',
+                    'recording' => 'https://youtube.com',
+                ],
+            ],
+            'reports' => [
+                ['student_id' => 1, 'student_name' => 'Muhammad Al-Fatih', 'file_name' => null],
+                ['student_id' => 2, 'student_name' => 'Reza Alfian', 'file_name' => null],
+            ],
+            'parent_meetings' => [
+                [
+                    'id' => 1,
+                    'student_id' => 1,
+                    'student_name' => 'Muhammad Al-Fatih',
+                    'date' => '16 Maret 2026 (14.33 WIB)',
+                    'review' => '-',
+                    'status' => 'belum',
+                ],
+                [
+                    'id' => 2,
+                    'student_id' => 2,
+                    'student_name' => 'Reza Alfian',
+                    'date' => '16 Maret 2026 (14.33 WIB)',
+                    'review' => '-',
+                    'status' => 'belum',
+                ],
+            ],
+        ];
     }
 
     public function update(Request $request, ClassManagement $classmanagement)
