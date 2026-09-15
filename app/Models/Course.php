@@ -10,7 +10,7 @@ class Course extends Model
     /** @use HasFactory<\Database\Factories\CourseFactory> */
     use HasFactory;
 
-    protected $fillable = ['subject'];
+    protected $fillable = ['subject', 'description'];
 
     public function available_course() {
         return $this->hasMany(AvailableCourse::class);

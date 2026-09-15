@@ -62,62 +62,60 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
 
   return (
     <>
-      {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-slate-950/50 z-40 md:hidden"
           onClick={() => setIsOpen(false)}
         ></div>
       )}
 
-      {/* Sidebar Utama */}
-      <div className={`
+      <aside className={`
         fixed md:static inset-y-0 left-0 z-50
-        w-64 shrink-0 bg-[#1E293B] h-screen shadow-xl p-6
+        w-72 shrink-0 h-screen shadow-2xl border-r border-slate-700/60
+        bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0 flex flex-col
+        md:translate-x-0 flex flex-col p-5
       `}>
-        {/* Logo */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-2">
-            <img src="/images/logo-sidebar.png" alt="Logo PFG" className="w-12 h-12 object-contain" />
-            <h1 className="text-xl font-bold text-white tracking-tight">PFG Portal</h1>
+          <div className="flex items-center space-x-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shadow-inner shadow-emerald-500/20">
+              <img src="/images/logo-sidebar.png" alt="Logo PFG" className="w-9 h-9 object-contain" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Portal</p>
+              <h1 className="text-lg font-bold text-white tracking-tight">PFG</h1>
+            </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="md:hidden text-gray-500">
-            <X size={24} />
+          <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-300 hover:text-white transition">
+            <X size={22} />
           </button>
         </div>
 
-        {/* User Profile Section */}
-        <div className="mb-6 border-b border-gray-700 pb-4">
+        <div className="mb-6 rounded-2xl border border-slate-700/80 bg-slate-800/60 p-3 shadow-lg shadow-slate-950/20">
           <Link
             href="/profile"
             onClick={() => setIsOpen(false)}
-            className="flex items-center space-x-3 p-2 rounded-xl transition hover:bg-gray-700/50 group"
+            className="flex items-center space-x-3 rounded-xl transition hover:bg-slate-700/80 group p-2"
           >
-            {/* Avatar */}
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-sm font-bold text-white shadow-md">
               {user?.name ? getInitials(user.name) : 'U'}
             </div>
 
-            {/* User Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm truncate">
+              <p className="text-white font-semibold text-sm truncate">
                 {user?.name || 'User'}
               </p>
-              <p className="text-gray-400 text-xs truncate">
+              <p className="text-slate-400 text-[11px] truncate">
                 {user?.email || ''}
               </p>
             </div>
 
-            {/* Icon Settings/Chevron */}
-            <Settings size={16} className="text-gray-400 group-hover:text-white transition" />
+            <Settings size={16} className="text-slate-400 group-hover:text-white transition" />
           </Link>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="space-y-1 flex-1 overflow-y-auto">
+        <nav className="space-y-1.5 flex-1 overflow-y-auto pr-1">
           {menus.map((menu) => {
             const isActive = route().current(menu.path);
             const hasBadge = menu.badge && menu.badge > 0;
@@ -127,18 +125,18 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
                 key={menu.name}
                 href={route(menu.path)}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center justify-between p-3 rounded-xl transition font-medium ${
+                className={`flex items-center justify-between rounded-xl p-3 transition font-medium ${
                   isActive
-                    ? 'bg-emerald-50 text-emerald-600'
-                    : 'text-white hover:bg-gray-700/50 hover:text-white'
+                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shadow-inner shadow-emerald-500/10'
+                    : 'text-slate-200 hover:bg-slate-800/80 hover:text-white'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  {menu.icon}
+                  <span className={`${isActive ? 'text-emerald-300' : 'text-slate-300'}`}>{menu.icon}</span>
                   <span className="text-sm">{menu.name}</span>
                 </div>
                 {hasBadge && (
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                  <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
                     {menu.badge > 99 ? '99+' : menu.badge}
                   </span>
                 )}
@@ -147,17 +145,16 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
           })}
         </nav>
 
-        {/* Logout Button */}
         <Link
           href='/logout'
           method='post'
-          className="mt-4 flex items-center space-x-3 p-3 text-red-400 font-medium cursor-pointer hover:bg-red-500/10 hover:text-red-300 rounded-xl transition"
+          className="mt-4 flex items-center space-x-3 p-3 text-rose-300 font-medium cursor-pointer hover:bg-rose-500/10 hover:text-rose-200 rounded-xl border border-transparent hover:border-rose-500/20 transition"
           as="button"
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           <span className="text-sm">Logout</span>
         </Link>
-      </div>
+      </aside>
     </>
   );
 };

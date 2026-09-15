@@ -100,7 +100,7 @@ class ClassManagementController extends Controller
         return Inertia::render('ClassManagement/Index', [
             'classes' => $classManagements,
             'tabs' => $tabs,
-            'canCreate' => $user->role === 'admin',
+            'canCreate' => $user->role === 'admin' || ($user->role === 'teacher' && (bool) $user->teacher),
             'canEdit' => $user->role === 'admin',
             'courses' => $courses,
             'userRole' => $user->role,
@@ -109,37 +109,58 @@ class ClassManagementController extends Controller
 
     public function store(Request $request)
     {
-        // Hanya admin yang bisa create
-        if (auth()->user()->role !== 'admin') {
+        $user = auth()->user();
+
+        if ($user->role !== 'admin' && (!$user->teacher || $user->role !== 'teacher')) {
             abort(403);
         }
 
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'type' => 'required|string|in:trial,regular,private',
-            'level' => 'required|integer',
-            'period' => 'required|string', // Ubah jadi string karena period code bisa berupa string
-            'order' => 'nullable|integer',
+            'level' => 'required|integer|min:1',
+            'period' => 'required|string|max:50',
+            'order' => 'nullable|integer|min:1',
             'schedule_at' => 'nullable|date',
             'note' => 'nullable|string',
-            'status' => 'required|string|in:inactive,active,report,pm,ended',
             'teacher_id' => 'nullable|exists:teachers,id',
-            'session' => 'nullable|integer',
-            'student' => 'nullable|integer',
+            'session' => 'nullable|integer|min:0',
+            'student' => 'nullable|integer|min:0',
         ]);
 
-        // Set default values jika tidak ada
+        $validated['status'] = 'inactive';
         $validated['order'] = $validated['order'] ?? 1;
         $validated['session'] = $validated['session'] ?? 0;
         $validated['student'] = $validated['student'] ?? 0;
+        $validated['teacher_id'] = $user->role === 'teacher'
+            ? $user->teacher->id
+            : ($validated['teacher_id'] ?? null);
+        $validated['note'] = $validated['note'] ?? '';
 
-        // Jika teacher_id tidak dikirim, set null
-        $validated['teacher_id'] = $validated['teacher_id'] ?? null;
-
-        $classManagement = ClassManagement::create($validated);
+        ClassManagement::create($validated);
 
         return redirect()->route('classmanagement')
             ->with('success', 'Class created successfully');
+    }
+
+    public function create()
+    {
+        $user = auth()->user();
+
+        if ($user->role !== 'admin' && (!$user->teacher || $user->role !== 'teacher')) {
+            abort(403);
+        }
+
+        return $this->index();
+    }
+
+    public function edit(ClassManagement $classmanagement)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        return $this->show($classmanagement);
     }
 
     public function show(ClassManagement $classmanagement)
@@ -172,17 +193,17 @@ class ClassManagementController extends Controller
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'teacher_id' => 'nullable|exists:teachers,id',
-            'level' => 'required|integer',
-            'period' => 'required|integer',
-            'order' => 'required|integer',
+            'level' => 'required|integer|min:1',
+            'period' => 'required|string|max:50',
+            'order' => 'required|integer|min:1',
             'type' => 'required|string|in:trial,regular,private',
-            'session' => 'nullable|integer',
-            'student' => 'nullable|integer',
+            'session' => 'nullable|integer|min:0',
+            'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
             'note' => 'nullable|string',
-            'status' => 'required|string|in:inactive,active,report,pm,ended'
         ]);
 
+        $validated['note'] = $validated['note'] ?? '';
         $classmanagement->update($validated);
 
         return redirect()->route('classmanagement')
@@ -221,6 +242,10 @@ class ClassManagementController extends Controller
         // Pastikan status class masih inactive
         if ($classmanagement->status !== 'inactive') {
             return back()->withErrors(['error' => 'Lesson plan can only be created for inactive classes.']);
+        }
+
+        if ($classmanagement->lessonPlan()->exists()) {
+            return back()->withErrors(['error' => 'This class already has a lesson plan.']);
         }
 
         // Validasi input

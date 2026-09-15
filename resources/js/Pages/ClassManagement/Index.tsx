@@ -461,72 +461,85 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Class Overview</h2>
-                </div>
-
-                {/* Tabs Section */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    {tabs.map((tab) => (
-                        <div
-                            key={tab.name}
-                            onClick={() => setActiveTab(tab.name)}
-                            className={`p-4 rounded-2xl shadow-sm cursor-pointer transition ${activeTab === tab.name
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-white text-gray-500 hover:bg-gray-50'
-                                }`}
-                        >
-                            <p className="text-xs font-medium uppercase tracking-wider">{tab.name}</p>
-                            <h3 className="text-xl font-bold">{tab.count} Class</h3>
+            <div className="space-y-6">
+                <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm md:p-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Operations</p>
+                            <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Class Overview</h2>
                         </div>
-                    ))}
-                </div>
 
-                {/* Table Section */}
-                <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
-                    <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4 w-full md:w-auto">
+                        <div className="flex items-center gap-3">
                             {canCreate && activeTab === "Lesson Plan" && (
                                 <button
                                     onClick={openCreateModal}
-                                    className="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-600 transition whitespace-nowrap"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600"
                                 >
                                     <Plus size={18} /> Add Class
                                 </button>
                             )}
                         </div>
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-3 top-2.5 text-gray-300" size={18} />
+                    </div>
+
+                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.name}
+                                type="button"
+                                onClick={() => setActiveTab(tab.name)}
+                                className={`rounded-2xl border p-4 text-left transition ${activeTab === tab.name
+                                    ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white'
+                                    }`}
+                            >
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-80">{tab.name}</p>
+                                <div className="mt-4 flex items-end justify-between gap-2">
+                                    <h3 className="text-2xl font-bold">{tab.count}</h3>
+                                    <span className="text-xs opacity-80">Class</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                    <div className="flex flex-col gap-4 border-b border-slate-200 bg-slate-50/80 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                            Showing {filteredClasses.length} classes
+                        </div>
+
+                        <div className="relative w-full md:w-72">
+                            <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
                             <input
                                 type="text"
                                 placeholder="Search by subject or teacher..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-100 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full"
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                             />
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-400 text-sm uppercase">
+                            <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.18em] text-slate-500">
                                 <tr>
-                                    <th className="p-6">No</th>
-                                    <th className="p-6">Subject</th>
-                                    <th className="p-6">Level</th>
-                                    <th className="p-6">Type</th>
-                                    <th className="p-6">Session</th>
-                                    <th className="p-6">Release Schedule</th>
-                                    <th className="p-6">Students</th>
-                                    <th className="p-6">Teacher</th>
-                                    <th className="p-6 text-center">Actions</th>
+                                    <th className="p-5">No</th>
+                                    <th className="p-5">Subject</th>
+                                    <th className="p-5">Level</th>
+                                    <th className="p-5">Type</th>
+                                    <th className="p-5">Session</th>
+                                    <th className="p-5">Release Schedule</th>
+                                    <th className="p-5">Students</th>
+                                    <th className="p-5">Teacher</th>
+                                    <th className="p-5 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-gray-700">
+                            <tbody className="text-slate-700">
                                 {filteredClasses.length === 0 ? (
                                     <tr>
-                                        <td colSpan={9} className="p-6 text-center text-gray-400">
+                                        <td colSpan={9} className="p-10 text-center text-slate-400">
                                             No classes found in {activeTab}
                                         </td>
                                     </tr>
@@ -534,65 +547,68 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                     filteredClasses.map((item, index) => {
                                         const isInactive = item.status_raw === 'inactive';
                                         const hasSchedule = item.has_schedule || false;
-
-                                        // Cek apakah user adalah teacher
                                         const showLessonPlanButton = isTeacher && isInactive && activeTab === 'Lesson Plan';
-
-                                        // Cek apakah admin dan inactive (tombol Set Time)
                                         const showSetTimeButton = isAdmin && isInactive;
 
                                         return (
-                                            <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
-                                                <td className="p-6 font-bold">{index + 1}</td>
-                                                <td className="p-6 font-semibold text-emerald-600">{item.subject}</td>
-                                                <td className="p-6">
-                                                    <span className="bg-gray-100 px-2 py-1 rounded text-xs font-medium">
+                                            <tr key={item.id} className="border-t border-slate-200 transition hover:bg-slate-50/70">
+                                                <td className="p-5 font-bold text-slate-500">{index + 1}</td>
+                                                <td className="p-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 font-semibold text-emerald-700">
+                                                            {item.subject.slice(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-slate-800">{item.subject}</p>
+                                                            <p className="text-xs text-slate-500">{item.note || 'No notes available'}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-5">
+                                                    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                                                         {item.level}
                                                     </span>
                                                 </td>
-                                                <td className="p-6">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getTypeBadgeClass(item.type)}`}>
+                                                <td className="p-5">
+                                                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${getTypeBadgeClass(item.type)}`}>
                                                         {item.type}
                                                     </span>
                                                 </td>
-                                                <td className="p-6">{item.session}</td>
-                                                <td className="p-6 text-gray-500 text-sm">{item.schedule}</td>
-                                                <td className="p-6 font-medium">{item.students_text}</td>
-                                                <td className="p-6 text-sm">{item.teacher_name}</td>
-                                                <td className="p-6">
+                                                <td className="p-5">{item.session}</td>
+                                                <td className="p-5 text-sm text-slate-500">{item.schedule}</td>
+                                                <td className="p-5 font-medium text-slate-700">{item.students_text}</td>
+                                                <td className="p-5 text-sm text-slate-600">{item.teacher_name}</td>
+                                                <td className="p-5">
                                                     <div className="flex justify-center gap-2">
-                                                        {/* Admin: Set Time button untuk inactive class */}
                                                         {showSetTimeButton ? (
                                                             <button
                                                                 onClick={() => openSetTimeModal(item.id)}
-                                                                className={`px-3 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 ${hasSchedule
-                                                                        ? 'bg-amber-500 text-white hover:bg-amber-600'
-                                                                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                                                                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition ${hasSchedule
+                                                                        ? 'bg-amber-500 hover:bg-amber-600'
+                                                                        : 'bg-blue-500 hover:bg-blue-600'
                                                                     }`}
                                                                 title={hasSchedule ? 'Edit Time' : 'Set Time'}
                                                             >
-                                                                <Clock size={16} />
+                                                                <Clock size={15} />
                                                                 {hasSchedule ? 'Edit Time' : 'Set Time'}
                                                             </button>
                                                         ) : (
-                                                            // Teacher: Start Lesson Plan atau View
                                                             showLessonPlanButton ? (
                                                                 <button
                                                                     onClick={() => openLessonPlanModal(item.id)}
-                                                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 ${hasSchedule
-                                                                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                                                            : 'bg-gray-400 text-white cursor-not-allowed'
+                                                                    className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition ${hasSchedule
+                                                                            ? 'bg-emerald-500 hover:bg-emerald-600'
+                                                                            : 'bg-slate-300 text-slate-500 cursor-not-allowed'
                                                                         }`}
                                                                     title={hasSchedule ? 'Start Lesson Plan' : 'Admin belum mengatur jam'}
                                                                     disabled={!hasSchedule}
                                                                 >
-                                                                    <BookOpen size={16} /> Start Lesson Plan
+                                                                    <BookOpen size={15} /> Start Lesson Plan
                                                                 </button>
                                                             ) : (
-                                                                // View button untuk semua role lainnya
                                                                 <button
                                                                     onClick={() => router.get(`/classmanagement/${item.id}`)}
-                                                                    className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition hover:bg-blue-100"
                                                                     title="View"
                                                                 >
                                                                     <Eye size={16} />
@@ -600,19 +616,18 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                                             )
                                                         )}
 
-                                                        {/* Edit & Delete untuk admin - hanya jika bukan showSetTimeButton */}
                                                         {canEdit && !showSetTimeButton && (
                                                             <>
                                                                 <button
                                                                     onClick={() => openEditModal(item)}
-                                                                    className="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 transition hover:bg-amber-100"
                                                                     title="Edit"
                                                                 >
                                                                     <Pencil size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDelete(item.id, item.subject)}
-                                                                    className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 transition hover:bg-rose-100"
                                                                     title="Delete"
                                                                 >
                                                                     <Trash2 size={16} />
