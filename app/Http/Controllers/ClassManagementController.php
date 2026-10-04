@@ -64,7 +64,7 @@ class ClassManagementController extends Controller
                 'type' => $class->type ?? '-',
                 'period' => $class->period ?? '',
                 'order' => $class->order ?? 1,
-                'session' => $class->session ?? 0,
+                'session' => ($class->schedules && $class->schedules->isNotEmpty()) ? $class->schedules->count() : ($class->session ?? 0),
                 'schedule' => $schedule,
                 'schedule_at' => $class->schedule_at ? $class->schedule_at->format('Y-m-d\TH:i') : null,
                 'students' => $class->student ?? 0,
@@ -241,6 +241,100 @@ class ClassManagementController extends Controller
             ];
         }
 
+        // Dynamically build sessions from class schedules (or session count)
+        $sessions = [];
+        if ($class->schedules && $class->schedules->isNotEmpty()) {
+            $sessions = $class->schedules
+                ->sortBy('meeting_number')
+                ->values()
+                ->map(function ($sch) {
+                    $datetime = '-';
+                    if ($sch->schedule_at) {
+                        try {
+                            $datetime = $sch->schedule_at->locale('id')->translatedFormat('d M Y (H.i \W\I\B)');
+                        } catch (\Exception $e) {
+                            $datetime = $sch->schedule_at->format('d M Y (H.i \W\I\B)');
+                        }
+                    }
+
+                    return [
+                        'id' => (int) $sch->meeting_number,
+                        'label' => 'Session ' . $sch->meeting_number,
+                        'datetime' => $datetime,
+                    ];
+                })
+                ->toArray();
+        } elseif (($class->session ?? 0) > 0) {
+            $startDate = $class->schedule_at ? \Carbon\Carbon::parse($class->schedule_at) : null;
+            for ($i = 1; $i <= (int) $class->session; $i++) {
+                $datetime = '-';
+                if ($startDate) {
+                    try {
+                        $meetingDate = $startDate->copy()->addWeeks($i - 1);
+                        $datetime = $meetingDate->locale('id')->translatedFormat('d M Y (H.i \W\I\B)');
+                    } catch (\Exception $e) {
+                        $datetime = '-';
+                    }
+                }
+
+                $sessions[] = [
+                    'id' => $i,
+                    'label' => 'Session ' . $i,
+                    'datetime' => $datetime,
+                ];
+            }
+        }
+
+        $sessionCount = count($sessions);
+        $attendance = [
+            1 => [],
+            2 => [],
+        ];
+        for ($i = 0; $i < $sessionCount; $i++) {
+            $attendance[1][] = $i === 0 ? 'hadir' : ($i === 1 ? 'sakit' : 'belum');
+            $attendance[2][] = $i === 0 ? 'izin' : ($i === 1 ? 'tidak_hadir' : 'belum');
+        }
+
+        $sessionHistory = [];
+        $pastSchedules = $class->schedules ? $class->schedules->sortBy('meeting_number')->values() : collect();
+        if ($pastSchedules->isNotEmpty()) {
+            $countToTake = min(2, $pastSchedules->count());
+            for ($i = 0; $i < $countToTake; $i++) {
+                $sch = $pastSchedules[$i];
+                $startStr = $sch->schedule_at
+                    ? $sch->schedule_at->locale('id')->translatedFormat('d F Y – H.i') . ' WIB'
+                    : '13 Februari 2026 – 19.01 WIB';
+                $endStr = $sch->schedule_at
+                    ? $sch->schedule_at->copy()->addMinutes(70)->locale('id')->translatedFormat('d F Y – H.i') . ' WIB'
+                    : '13 Februari 2026 – 20.11 WIB';
+
+                $sessionHistory[] = [
+                    'id' => $sch->meeting_number,
+                    'room_name' => 'PFG-' . str_pad((string) ($class->id * 10 + $i), 2, '0', STR_PAD_LEFT),
+                    'start' => $startStr,
+                    'end' => $endStr,
+                    'recording' => 'https://youtube.com',
+                ];
+            }
+        } else {
+            $sessionHistory = [
+                [
+                    'id' => 1,
+                    'room_name' => 'PFG-10',
+                    'start' => '13 Februari 2026 – 19.01 WIB',
+                    'end' => '13 Februari 2026 – 20.11 WIB',
+                    'recording' => 'https://youtube.com',
+                ],
+                [
+                    'id' => 2,
+                    'room_name' => 'PFG-42',
+                    'start' => '20 Februari 2026 – 18.47 WIB',
+                    'end' => '20 Februari 2026 – 20.00 WIB',
+                    'recording' => 'https://youtube.com',
+                ],
+            ];
+        }
+
         return [
             'id' => $class->id,
             'title' => $title,
@@ -259,31 +353,9 @@ class ClassManagementController extends Controller
                 ['id' => 1, 'name' => 'Muhammad Al-Fatih'],
                 ['id' => 2, 'name' => 'Reza Alfian'],
             ],
-            'sessions' => [
-                ['id' => 1, 'label' => 'Session 1', 'datetime' => '13 Feb 2026 (19.00 WIB)'],
-                ['id' => 2, 'label' => 'Session 2', 'datetime' => '20 Feb 2026 (19.00 WIB)'],
-                ['id' => 3, 'label' => 'Session 3', 'datetime' => '27 Feb 2026 (19.00 WIB)'],
-            ],
-            'attendance' => [
-                1 => ['hadir', 'sakit', 'belum'],
-                2 => ['izin', 'tidak_hadir', 'belum'],
-            ],
-            'session_history' => [
-                [
-                    'id' => 1,
-                    'room_name' => 'PFG-10',
-                    'start' => '13 Februari 2026 – 19.01 WIB',
-                    'end' => '13 Februari 2026 – 20.11 WIB',
-                    'recording' => 'https://youtube.com',
-                ],
-                [
-                    'id' => 2,
-                    'room_name' => 'PFG-42',
-                    'start' => '20 Februari 2026 – 18.47 WIB',
-                    'end' => '20 Februari 2026 – 20.00 WIB',
-                    'recording' => 'https://youtube.com',
-                ],
-            ],
+            'sessions' => $sessions,
+            'attendance' => $attendance,
+            'session_history' => $sessionHistory,
             'reports' => [
                 ['student_id' => 1, 'student_name' => 'Muhammad Al-Fatih', 'file_name' => null],
                 ['student_id' => 2, 'student_name' => 'Reza Alfian', 'file_name' => null],
@@ -446,9 +518,10 @@ class ClassManagementController extends Controller
 
         ClassSchedule::insert($schedules);
 
-        // Update class management schedule_at (first meeting)
+        // Update class management schedule_at (first meeting) and total session
         $classmanagement->update([
             'schedule_at' => $schedules[0]['schedule_at'],
+            'session' => $meetingCount,
         ]);
 
         return redirect()->route('classmanagement')

@@ -3,7 +3,6 @@ import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     ChevronDown,
-    ChevronUp,
     DoorClosed,
     DoorOpen,
     ExternalLink,
@@ -31,6 +30,7 @@ interface SessionItem {
 }
 
 interface LessonPlanData {
+    [key: string]: any;
     cdev: string[];
     model: string;
     method: string;
@@ -139,7 +139,7 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
     const defaultStage: StageKey =
         classData.status === 'ended' ? 'parent_meeting' : classData.status;
 
-    const [openStage, setOpenStage] = useState<StageKey>(defaultStage);
+    const [openStage, setOpenStage] = useState<StageKey | null>(defaultStage);
     const [roomOpen, setRoomOpen] = useState(false);
     const [classEnded, setClassEnded] = useState(classData.status === 'ended');
     const [students, setStudents] = useState(classData.students);
@@ -164,7 +164,7 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
     const isTeacher = userRole === 'teacher';
 
     const toggleStage = (stage: StageKey) => {
-        setOpenStage((current) => (current === stage ? current : stage));
+        setOpenStage((current) => (current === stage ? null : stage));
     };
 
     const toggleCdev = (value: string) => {
@@ -346,22 +346,42 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
                         return (
                             <section
                                 key={stage.key}
-                                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+                                className={`overflow-hidden rounded-[28px] border bg-white transition-all duration-300 ${
+                                    isOpen
+                                        ? 'border-emerald-200/90 shadow-[0_16px_36px_rgba(16,185,129,0.08)]'
+                                        : 'border-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.06)] hover:border-slate-300'
+                                }`}
                             >
                                 <button
                                     type="button"
                                     onClick={() => toggleStage(stage.key)}
-                                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-6"
+                                    className="group flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors duration-200 hover:bg-slate-50/70 md:px-6"
                                 >
                                     <div>
-                                        <h2 className="text-lg font-bold text-slate-900">{stage.title}</h2>
+                                        <h2 className={`text-lg font-bold transition-colors duration-200 ${isOpen ? 'text-emerald-700' : 'text-slate-900 group-hover:text-emerald-600'}`}>
+                                            {stage.title}
+                                        </h2>
                                         <p className="text-sm text-slate-500">{stage.subtitle}</p>
                                     </div>
-                                    {isOpen ? <ChevronUp className="text-slate-400" /> : <ChevronDown className="text-slate-400" />}
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-300 ${isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'}`}>
+                                        <ChevronDown
+                                            size={18}
+                                            className={`transition-transform duration-300 ease-in-out ${
+                                                isOpen ? 'rotate-180 text-emerald-600' : ''
+                                            }`}
+                                        />
+                                    </div>
                                 </button>
 
-                                {isOpen && (
-                                    <div className="border-t border-slate-100 px-5 py-5 md:px-6">
+                                <div
+                                    className={`grid transition-all duration-300 ease-in-out ${
+                                        isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                                    }`}
+                                >
+                                    <div className="min-h-0 overflow-hidden">
+                                        <div className="border-t border-slate-100 px-5 py-5 md:px-6">
                                         {stage.key === 'lesson_plan' && (
                                             <form onSubmit={handleLessonPlanSubmit} className="space-y-5">
                                                 <div>
@@ -456,45 +476,57 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
                                                         <table className="w-full min-w-[720px] text-left">
                                                             <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.18em] text-slate-500">
                                                                 <tr>
-                                                                    <th className="p-4">Name</th>
-                                                                    {classData.sessions.map((session) => (
-                                                                        <th key={session.id} className="p-4">
-                                                                            <p>{session.label}</p>
-                                                                            <p className="mt-1 text-[10px] font-medium normal-case tracking-normal text-slate-400">
-                                                                                {session.datetime}
-                                                                            </p>
+                                                                    <th className="p-4 min-w-[180px] whitespace-nowrap">Name</th>
+                                                                    {classData.sessions.length === 0 ? (
+                                                                        <th className="p-4 text-xs font-normal normal-case tracking-normal text-slate-400 italic">
+                                                                            Belum ada sesi yang dijadwalkan
                                                                         </th>
-                                                                    ))}
+                                                                    ) : (
+                                                                        classData.sessions.map((session) => (
+                                                                            <th key={session.id} className="p-4 min-w-[150px] whitespace-nowrap">
+                                                                                <p className="whitespace-nowrap">{session.label}</p>
+                                                                                <p className="mt-1 text-[10px] font-medium normal-case tracking-normal text-slate-400 whitespace-nowrap">
+                                                                                    {session.datetime}
+                                                                                </p>
+                                                                            </th>
+                                                                        ))
+                                                                    )}
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {students.map((student) => (
                                                                     <tr key={student.id} className="border-t border-slate-100">
-                                                                        <td className="p-4 font-semibold text-slate-800">{student.name}</td>
-                                                                        {classData.sessions.map((session, sessionIndex) => {
-                                                                            const value = attendance[student.id]?.[sessionIndex] ?? 'belum';
-                                                                            return (
-                                                                                <td key={`${student.id}-${session.id}`} className="p-4">
-                                                                                    <select
-                                                                                        value={value}
-                                                                                        onChange={(e) =>
-                                                                                            updateAttendance(
-                                                                                                student.id,
-                                                                                                sessionIndex,
-                                                                                                e.target.value as AttendanceStatus,
-                                                                                            )
-                                                                                        }
-                                                                                        className={`w-full rounded-xl border-0 px-3 py-2 text-xs font-semibold ${attendanceStyle(value)}`}
-                                                                                    >
-                                                                                        {attendanceOptions.map((option) => (
-                                                                                            <option key={option.value} value={option.value}>
-                                                                                                {option.label}
-                                                                                            </option>
-                                                                                        ))}
-                                                                                    </select>
-                                                                                </td>
-                                                                            );
-                                                                        })}
+                                                                        <td className="p-4 font-semibold text-slate-800 whitespace-nowrap">{student.name}</td>
+                                                                        {classData.sessions.length === 0 ? (
+                                                                            <td className="p-4 text-xs text-slate-400 italic">
+                                                                                Belum ada sesi
+                                                                            </td>
+                                                                        ) : (
+                                                                            classData.sessions.map((session, sessionIndex) => {
+                                                                                const value = attendance[student.id]?.[sessionIndex] ?? 'belum';
+                                                                                return (
+                                                                                    <td key={`${student.id}-${session.id}`} className="p-4 min-w-[150px]">
+                                                                                        <select
+                                                                                            value={value}
+                                                                                            onChange={(e) =>
+                                                                                                updateAttendance(
+                                                                                                    student.id,
+                                                                                                    sessionIndex,
+                                                                                                    e.target.value as AttendanceStatus,
+                                                                                                )
+                                                                                            }
+                                                                                            className={`w-full rounded-xl border-0 px-3 py-2 text-xs font-semibold ${attendanceStyle(value)}`}
+                                                                                        >
+                                                                                            {attendanceOptions.map((option) => (
+                                                                                                <option key={option.value} value={option.value}>
+                                                                                                    {option.label}
+                                                                                                </option>
+                                                                                            ))}
+                                                                                        </select>
+                                                                                    </td>
+                                                                                );
+                                                                            })
+                                                                        )}
                                                                     </tr>
                                                                 ))}
                                                             </tbody>
@@ -641,8 +673,9 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
                                                 </div>
                                             </div>
                                         )}
+                                        </div>
                                     </div>
-                                )}
+                                </div>
                             </section>
                         );
                     })}
