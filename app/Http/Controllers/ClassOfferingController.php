@@ -352,7 +352,7 @@ class ClassOfferingController extends Controller
             'type' => $classOffering->type,
             'student' => $classOffering->student,
             'schedule_at' => $classOffering->schedule_at,
-            'note' => $classOffering->note,
+            'note' => $classOffering->note ?? '',
             'session' => 0,
             'status' => 'inactive',
             'preferred_day' => $selectedPref['day'] ?? null, // Tambahkan field di migration

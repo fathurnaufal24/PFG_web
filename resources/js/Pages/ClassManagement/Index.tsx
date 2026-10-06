@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Plus, Eye, Pencil, Trash2, X, BookOpen, Clock } from 'lucide-react';
+import { Search, Plus, Eye, Pencil, Trash2, X, BookOpen, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import { PageProps } from '@/types';
 
 interface ClassData {
     id: number;
@@ -55,6 +56,10 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     const [isEditMode, setIsEditMode] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const pageProps = usePage<PageProps>().props;
+    const flash = pageProps.flash;
+    const [flashVisible, setFlashVisible] = useState(true);
 
     // State untuk Lesson Plan
     const [isLessonPlanModalOpen, setIsLessonPlanModalOpen] = useState(false);
@@ -464,6 +469,36 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     return (
         <AuthenticatedLayout>
             <div className="space-y-6">
+                {/* Flash Message Banner */}
+                {flash?.success && flashVisible && (
+                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-sm animate-in fade-in duration-200">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle className="text-emerald-600 shrink-0" size={20} />
+                            <span className="text-sm font-semibold">{flash.success}</span>
+                        </div>
+                        <button
+                            onClick={() => setFlashVisible(false)}
+                            className="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg hover:bg-emerald-100/50 transition"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                )}
+                {flash?.error && flashVisible && (
+                    <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 flex items-center justify-between shadow-sm animate-in fade-in duration-200">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="text-red-600 shrink-0" size={20} />
+                            <span className="text-sm font-semibold">{flash.error}</span>
+                        </div>
+                        <button
+                            onClick={() => setFlashVisible(false)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-100/50 transition"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                )}
+
                 <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm md:p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
@@ -566,11 +601,21 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                         const showLessonPlanButton = isTeacher && isInactive && activeTab === 'Lesson Plan';
                                         const showSetTimeButton = isAdmin && isInactive;
 
+                                        // Untuk guru di tab "Lesson Plan":
+                                        // - Sebelum Set Time: baris tidak clickable (unclickable)
+                                        // - Setelah Set Time: baris tetap tidak clickable ke detail, HANYA tombol "Start Lesson Plan" yang clickable
+                                        const isRowClickable = !(isTeacher && activeTab === 'Lesson Plan');
+
                                         return (
                                             <tr
                                                 key={item.id}
-                                                className="cursor-pointer border-t border-slate-200 transition hover:bg-slate-50/70"
-                                                onClick={() => router.get(`/classmanagement/${item.id}`)}
+                                                className={`border-t border-slate-200 transition ${isRowClickable
+                                                    ? 'cursor-pointer hover:bg-slate-50/70'
+                                                    : !hasSchedule
+                                                        ? 'bg-slate-50/30 text-slate-500 cursor-default'
+                                                        : 'cursor-default'
+                                                    }`}
+                                                onClick={isRowClickable ? () => router.get(`/classmanagement/${item.id}`) : undefined}
                                             >
                                                 <td className="p-5 font-bold text-slate-500">{index + 1}</td>
                                                 <td className="p-5">
@@ -617,8 +662,8 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                                                 <button
                                                                     onClick={() => openLessonPlanModal(item.id)}
                                                                     className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white transition ${hasSchedule
-                                                                            ? 'bg-emerald-500 hover:bg-emerald-600'
-                                                                            : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                                                            ? 'bg-emerald-500 hover:bg-emerald-600 shadow-sm cursor-pointer'
+                                                                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                                                         }`}
                                                                     title={hasSchedule ? 'Start Lesson Plan' : 'Admin belum mengatur jam'}
                                                                     disabled={!hasSchedule}

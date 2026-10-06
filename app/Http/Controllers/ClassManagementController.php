@@ -178,6 +178,12 @@ class ClassManagementController extends Controller
             if (!$user->teacher || $classmanagement->teacher_id !== $user->teacher->id) {
                 abort(403, 'You are not authorized to view this class.');
             }
+
+            // Jika status masih inactive (tahap Lesson Plan), guru belum bisa akses halaman detail kelas
+            if ($classmanagement->status === 'inactive') {
+                return redirect()->route('classmanagement')
+                    ->with('error', 'Kelas masih dalam tahap Lesson Plan. Silakan selesaikan Lesson Plan terlebih dahulu setelah admin mengatur jam.');
+            }
         }
 
         $classmanagement->load(['course', 'teacher.user', 'lessonPlan', 'schedules']);
