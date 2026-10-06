@@ -55,4 +55,26 @@ class ClassManagement extends Model
     {
         return $this->schedules()->count() > 0;
     }
+
+    public function classStudents()
+    {
+        return $this->hasMany(ClassStudent::class, 'class_management_id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'class_students', 'class_management_id', 'student_id')
+            ->withPivot('id', 'status', 'notes', 'created_at')
+            ->withTimestamps();
+    }
+
+    public function enrolledStudents()
+    {
+        return $this->students()->wherePivot('status', 'enrolled');
+    }
+
+    public function pendingStudents()
+    {
+        return $this->students()->wherePivot('status', 'pending');
+    }
 }

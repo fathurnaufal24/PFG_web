@@ -34,21 +34,37 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
     }
   }, [isAdmin, props.unreadCount]);
 
-  const menus = [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "dashboard" },
-    { name: "Class Management", icon: <Users size={20} />, path: "classmanagement" },
-    { name: "Revenue", icon: <Wallet size={20} />, path: "revenue" },
-    { name: "My Schedule", icon: <Calendar size={20} />, path: "schedule" },
-    { name: "Module", icon: <BookOpen size={20} />, path: "module" },
-    { name: "Class Offering", icon: <Gift size={20} />, path: "classoffering" },
-    {
-      name: "Notifications",
-      icon: <Bell size={20} />,
-      path: "notifications",
-      badge: !isAdmin ? unreadCount : 0 // Badge hanya untuk teacher
-    },
-    { name: "Parent Meeting", icon: <UserPlus size={20} />, path: "parentmeeting" },
-  ];
+  const isStudent = user?.role === 'student';
+
+  const menus = isStudent
+    ? [
+        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "dashboard" },
+        { name: "Kelas Saya", icon: <Users size={20} />, path: "classmanagement" },
+        { name: "Jadwal Saya", icon: <Calendar size={20} />, path: "schedule" },
+        { name: "Modul Belajar", icon: <BookOpen size={20} />, path: "module" },
+        { name: "Class Offering", icon: <Gift size={20} />, path: "classoffering" },
+        {
+          name: "Notifications",
+          icon: <Bell size={20} />,
+          path: "notifications",
+          badge: unreadCount,
+        },
+      ]
+    : [
+        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "dashboard" },
+        { name: "Class Management", icon: <Users size={20} />, path: "classmanagement" },
+        { name: "Revenue", icon: <Wallet size={20} />, path: "revenue" },
+        { name: "My Schedule", icon: <Calendar size={20} />, path: "schedule" },
+        { name: "Module", icon: <BookOpen size={20} />, path: "module" },
+        { name: "Class Offering", icon: <Gift size={20} />, path: "classoffering" },
+        {
+          name: "Notifications",
+          icon: <Bell size={20} />,
+          path: "notifications",
+          badge: !isAdmin ? unreadCount : 0,
+        },
+        { name: "Parent Meeting", icon: <UserPlus size={20} />, path: "parentmeeting" },
+      ];
 
   // Ambil inisial nama untuk avatar
   const getInitials = (name: string) => {

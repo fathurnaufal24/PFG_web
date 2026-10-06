@@ -114,5 +114,47 @@ class UserSeeder extends Seeder
             'status' => 'report', // TAMBAHKAN STATUS
             'planned' => true
         ]);
+
+        // Student 1
+        $studentUser1 = User::firstOrCreate(
+            ['email' => 'student1@localhost.com'],
+            [
+                'name' => 'Muhammad Al-Fatih',
+                'password' => Hash::make('student123'),
+                'role' => 'student',
+            ]
+        );
+        $studentUser1->student()->firstOrCreate(
+            ['user_id' => $studentUser1->id],
+            ['name' => 'Muhammad Al-Fatih']
+        );
+
+        // Student 2
+        $studentUser2 = User::firstOrCreate(
+            ['email' => 'student2@localhost.com'],
+            [
+                'name' => 'Reza Alfian',
+                'password' => Hash::make('student123'),
+                'role' => 'student',
+            ]
+        );
+        $studentUser2->student()->firstOrCreate(
+            ['user_id' => $studentUser2->id],
+            ['name' => 'Reza Alfian']
+        );
+
+        // Student 3
+        $studentUser3 = User::firstOrCreate(
+            ['email' => 'student3@localhost.com'],
+            [
+                'name' => 'Aisyah Putri',
+                'password' => Hash::make('student123'),
+                'role' => 'student',
+            ]
+        );
+        $studentUser3->student()->firstOrCreate(
+            ['user_id' => $studentUser3->id],
+            ['name' => 'Aisyah Putri']
+        );
     }
 }

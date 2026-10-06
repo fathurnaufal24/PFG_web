@@ -62,6 +62,20 @@ Route::middleware('auth')->group(function () {
         ->name('classmanagement.schedule');
     Route::get('/classmanagement/{classmanagement}/can-start-lesson', [ClassManagementController::class, 'canStartLessonPlan'])
         ->name('classmanagement.can-start-lesson');
+
+    // Student self-enrollment route
+    Route::post('/classmanagement/{classmanagement}/enroll', [ClassManagementController::class, 'enrollStudent'])
+        ->name('classmanagement.enroll');
+
+    // Teacher/Admin student management routes
+    Route::post('/classmanagement/{classmanagement}/students', [ClassManagementController::class, 'addStudent'])
+        ->name('classmanagement.students.add');
+    Route::post('/classmanagement/{classmanagement}/students/{student}/approve', [ClassManagementController::class, 'approveStudent'])
+        ->name('classmanagement.students.approve');
+    Route::post('/classmanagement/{classmanagement}/students/{student}/reject', [ClassManagementController::class, 'rejectStudent'])
+        ->name('classmanagement.students.reject');
+    Route::delete('/classmanagement/{classmanagement}/students/{student}', [ClassManagementController::class, 'removeStudent'])
+        ->name('classmanagement.students.remove');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/schedule', function () {
         return Inertia::render('Schedule/Index');
