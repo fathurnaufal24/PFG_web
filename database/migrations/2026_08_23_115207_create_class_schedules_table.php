@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ClassManagement;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('class_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(ClassManagement::class)->constrained()->cascadeOnDelete();
+            $table->string('class_management_id');
+            $table->foreign('class_management_id')->references('id')->on('class_management')->cascadeOnDelete();
             $table->integer('meeting_number'); // 1-10
             $table->dateTime('schedule_at');
             $table->timestamps();

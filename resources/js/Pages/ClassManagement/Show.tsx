@@ -40,7 +40,7 @@ interface LessonPlanData {
 }
 
 interface ClassRoomData {
-    id: number;
+    id: string;
     title: string;
     subject: string;
     teacher_name: string;

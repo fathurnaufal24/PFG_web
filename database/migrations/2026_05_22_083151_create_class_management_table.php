@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('class_management', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary(); // format: {course subject}-{period}.{order}, mis. QV-2.1
             $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Teacher::class)->nullable()->constrained()->cascadeOnDelete();
             $table->integer('level');

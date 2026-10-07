@@ -4,12 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class ClassManagement extends Model
 {
     use HasFactory;
 
     protected $table = 'class_management';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $class) {
+            if ($class->id) {
+                return;
+            }
+
+            $subject = Course::findOrFail($class->course_id)->subject;
+            $class->id = "{$subject}-{$class->period}.{$class->order}";
+
+            if (static::whereKey($class->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'order' => "Class ID {$class->id} sudah digunakan.",
+                ]);
+            }
+        });
+    }
 
     protected $fillable = [
         'course_id',

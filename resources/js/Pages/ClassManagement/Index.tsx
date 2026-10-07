@@ -5,7 +5,7 @@ import { router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 
 interface ClassData {
-    id: number;
+    id: string;
     subject: string;
     level: number;
     type: string;
@@ -54,7 +54,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     const [typeFilter, setTypeFilter] = useState<'all' | 'trial' | 'regular' | 'private'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
-    const [editId, setEditId] = useState<number | null>(null);
+    const [editId, setEditId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const pageProps = usePage<PageProps>().props;
@@ -63,7 +63,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
 
     // State untuk Lesson Plan
     const [isLessonPlanModalOpen, setIsLessonPlanModalOpen] = useState(false);
-    const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+    const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
     const [isLessonPlanSubmitting, setIsLessonPlanSubmitting] = useState(false);
     const [lessonPlanData, setLessonPlanData] = useState({
         cdev: [] as string[],
@@ -76,7 +76,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
 
     // State untuk Set Time
     const [isSetTimeModalOpen, setIsSetTimeModalOpen] = useState(false);
-    const [setTimeClassId, setSetTimeClassId] = useState<number | null>(null);
+    const [setTimeClassId, setSetTimeClassId] = useState<string | null>(null);
     const [isSetTimeSubmitting, setIsSetTimeSubmitting] = useState(false);
     const [setTimeData, setSetTimeData] = useState({
         start_date: '',
@@ -126,7 +126,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
     });
 
     // --- Handlers untuk Class Management ---
-    const handleDelete = (id: number, subject: string) => {
+    const handleDelete = (id: string, subject: string) => {
         if (confirm(`Are you sure you want to delete class "${subject}"?`)) {
             router.delete(`/classmanagement/${id}`);
         }
@@ -331,7 +331,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         setIsModalOpen(true);
     };
 
-    const openLessonPlanModal = (classId: number) => {
+    const openLessonPlanModal = (classId: string) => {
         // Cek apakah class sudah punya schedule
         const classItem = classes.find(c => c.id === classId);
         if (!classItem?.has_schedule) {
@@ -351,7 +351,7 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
         setIsLessonPlanModalOpen(true);
     };
 
-    const openSetTimeModal = (classId: number) => {
+    const openSetTimeModal = (classId: string) => {
         const classItem = classes.find(c => c.id === classId);
         setSetTimeClassId(classId);
 

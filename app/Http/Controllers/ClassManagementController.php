@@ -316,7 +316,7 @@ class ClassManagementController extends Controller
 
                 $sessionHistory[] = [
                     'id' => $sch->meeting_number,
-                    'room_name' => 'PFG-' . str_pad((string) ($class->id * 10 + $i), 2, '0', STR_PAD_LEFT),
+                    'room_name' => 'PFG-' . $class->id . '-' . $i,
                     'start' => $startStr,
                     'end' => $endStr,
                     'recording' => 'https://youtube.com',
@@ -350,7 +350,7 @@ class ClassManagementController extends Controller
             'level' => $class->level ?? 1,
             'type' => $class->type ?? 'regular',
             'class_link' => 'https://meet.pfg.id/' . trim($slug, '-'),
-            'room_name' => 'PFG-' . str_pad((string) $class->id, 2, '0', STR_PAD_LEFT),
+            'room_name' => 'PFG-' . $class->id,
             'status' => $statusMap[$class->status] ?? 'lesson_plan',
             'status_raw' => $class->status,
             'main_alias' => $title,

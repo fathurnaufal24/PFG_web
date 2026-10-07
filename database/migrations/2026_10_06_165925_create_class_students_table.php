@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('class_students', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_management_id')->constrained('class_management')->cascadeOnDelete();
+            $table->string('class_management_id');
+            $table->foreign('class_management_id')->references('id')->on('class_management')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
             $table->string('status')->default('enrolled'); // 'pending', 'enrolled', 'rejected'
             $table->text('notes')->nullable();
