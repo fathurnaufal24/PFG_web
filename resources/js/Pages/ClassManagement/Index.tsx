@@ -187,7 +187,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
             note: formData.note || null,
             teacher_id: formData.teacher_id ? parseInt(formData.teacher_id) : null,
             session: formData.session || 0,
-            student: formData.student || 0,
         };
 
         if (isEditMode && editId) {
@@ -848,7 +847,6 @@ const ClassManagementIndex = ({ classes, tabs, canCreate, canEdit, courses = [],
                                 </div>
 
                                 <input type="hidden" name="session" value={formData.session} />
-                                <input type="hidden" name="student" value={formData.student} />
                                 <input type="hidden" name="teacher_id" value={formData.teacher_id || ''} />
                             </div>
 

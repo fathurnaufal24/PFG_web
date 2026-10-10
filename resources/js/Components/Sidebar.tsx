@@ -64,6 +64,7 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
           badge: !isAdmin ? unreadCount : 0,
         },
         { name: "Parent Meeting", icon: <UserPlus size={20} />, path: "parentmeeting" },
+        ...(isAdmin ? [{ name: "Settings", icon: <Settings size={20} />, path: "settings" }] : []),
       ];
 
   // Ambil inisial nama untuk avatar

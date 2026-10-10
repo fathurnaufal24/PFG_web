@@ -151,9 +151,11 @@ const ClassOfferingIndex = ({
         // Sekarang logikanya benar:
         // - showArchived = false → tampilkan yang aktif (tidak archived dan tidak expired)
         // - showArchived = true → tampilkan yang archived atau expired
-        const matchesArchive = showArchived
-            ? item.is_archived || item.is_expired
-            : !item.is_archived && !item.is_expired;
+        const matchesArchive = !isAdmin && item.has_applied
+            ? true // teacher tetap melihat offering yang sudah di-apply
+            : showArchived
+                ? item.is_archived || item.is_expired
+                : !item.is_archived && !item.is_expired;
 
         return matchesSearch && matchesCourse && matchesArchive;
     });
@@ -258,7 +260,6 @@ const ClassOfferingIndex = ({
             course_id: parseInt(formData.course_id),
             level: parseInt(formData.level),
             order: parseInt(formData.order),
-            student: formData.student ? parseInt(formData.student) : 0,
             is_archived: formData.is_archived,
             preferences: validPreferences,
             has_deadline: formData.has_deadline,
@@ -324,11 +325,9 @@ const ClassOfferingIndex = ({
         if (!approveModalData) return;
         setIsProcessingAction(true);
         router.post(`/classoffering/${approveModalData.offering.id}/approve/${approveModalData.teacher.id}`, {}, {
-            onSuccess: () => {
+            onFinish: () => {
                 setApproveModalData(null);
                 setFlashVisible(true);
-            },
-            onFinish: () => {
                 setIsProcessingAction(false);
             }
         });
@@ -817,20 +816,6 @@ const ClassOfferingIndex = ({
                                             min="1"
                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                             placeholder="e.g., 1"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Max Students
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="student"
-                                            value={formData.student}
-                                            onChange={handleInputChange}
-                                            min="0"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                            placeholder="0"
                                         />
                                     </div>
                                 </div>

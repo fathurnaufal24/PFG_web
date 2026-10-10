@@ -6,9 +6,12 @@ use App\Models\ClassOffering;
 use App\Models\ClassOfferingTeacher;
 use App\Models\ClassManagement;
 use App\Models\Course;
+use App\Models\ClassTypeSetting;
 use App\Models\Notification;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -27,10 +30,22 @@ class ClassOfferingController extends Controller
         if ($isAdmin) {
             $offerings = $query->orderBy('created_at', 'desc')->get();
         } else {
-            $offerings = $query->where('is_archived', false)
-                ->where(function ($q) {
-                    $q->where('close_offering', '>', now())
-                        ->orWhereNull('close_offering');
+            $offerings = $query->where(function ($outer) use ($teacherId) {
+                    $outer->where(function ($q) {
+                        $q->where('is_archived', false)
+                            ->where(function ($q) {
+                                $q->where('close_offering', '>', now())
+                                    ->orWhereNull('close_offering');
+                            });
+                    })
+                    // Offering yang sudah di-archive tetap tampil bagi teacher yang pernah apply
+                    ->orWhereHas('teacherApplications', function ($q) use ($teacherId) {
+                        $q->where('teacher_id', $teacherId);
+                    });
+                })
+                // Teacher yang sudah diterima tidak perlu lagi melihat card-nya (sudah masuk Class Management)
+                ->whereDoesntHave('teacherApplications', function ($q) use ($teacherId) {
+                    $q->where('teacher_id', $teacherId)->where('status', 'accepted');
                 })
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -158,7 +173,6 @@ class ClassOfferingController extends Controller
             'period' => 'required|string',
             'order' => 'required|integer|min:1',
             'type' => 'required|string|in:trial,regular,private',
-            'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
             'close_offering' => 'nullable|date|after:now',
             'note' => 'nullable|string',
@@ -182,6 +196,7 @@ class ClassOfferingController extends Controller
             ]);
         }
 
+        $validated['student'] = ClassTypeSetting::maxStudentFor($validated['type']);
         $validated['curriculum_id'] = auth()->user()->curriculum->id ?? 1;
         $validated['is_archived'] = $validated['is_archived'] ?? false;
         $validated['close_offering'] = $request->has_deadline ? $validated['close_offering'] : null;
@@ -205,7 +220,6 @@ class ClassOfferingController extends Controller
             'period' => 'required|string',
             'order' => 'required|integer|min:1',
             'type' => 'required|string|in:trial,regular,private',
-            'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
             'close_offering' => 'nullable|date',
             'note' => 'nullable|string',
@@ -229,6 +243,10 @@ class ClassOfferingController extends Controller
         }
 
         $validated['close_offering'] = $request->has_deadline ? $validated['close_offering'] : null;
+
+        if ($validated['type'] !== $classOffering->type) {
+            $validated['student'] = ClassTypeSetting::maxStudentFor($validated['type']);
+        }
 
         $classOffering->update($validated);
 
@@ -299,68 +317,75 @@ class ClassOfferingController extends Controller
             abort(403);
         }
 
-        $application = ClassOfferingTeacher::where('id', $applicationId)
-            ->where('class_offering_id', $classOffering->id)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        try {
+            DB::transaction(function () use ($classOffering, $applicationId) {
+            $application = ClassOfferingTeacher::where('id', $applicationId)
+                ->where('class_offering_id', $classOffering->id)
+                ->where('status', 'pending')
+                ->firstOrFail();
 
-        // Approve application
-        $application->update([
-            'status' => 'accepted',
-            'approved_at' => now(),
-        ]);
+            // Approve application
+            $application->update([
+                'status' => 'accepted',
+                'approved_at' => now(),
+            ]);
 
-        // Reject semua aplikasi lain yang pending untuk offering ini
-        $rejectedApplications = ClassOfferingTeacher::where('class_offering_id', $classOffering->id)
-            ->where('id', '!=', $applicationId)
-            ->where('status', 'pending')
-            ->get();
+            // Reject semua aplikasi lain yang pending untuk offering ini
+            $rejectedApplications = ClassOfferingTeacher::where('class_offering_id', $classOffering->id)
+                ->where('id', '!=', $applicationId)
+                ->where('status', 'pending')
+                ->get();
 
-        foreach ($rejectedApplications as $rejected) {
+            foreach ($rejectedApplications as $rejected) {
+                Notification::create([
+                    'user_id' => $rejected->teacher->user_id,
+                    'type' => 'class_offering_rejected',
+                    'title' => 'Mohon maaf anda belum diterima',
+                    'text' => "Kami mohon maaf, anda belum diterima untuk offering {$classOffering->course->subject} (Lvl. {$classOffering->level}). Silakan coba offering lainnya.",
+                    'href' => '/classoffering',
+                    'read' => false,
+                ]);
+
+                $rejected->delete();
+            }
+
+            // Kirim notifikasi ke teacher yang diterima
             Notification::create([
-                'user_id' => $rejected->teacher->user_id,
-                'type' => 'class_offering_rejected',
-                'title' => 'Mohon maaf anda belum diterima',
-                'text' => "Kami mohon maaf, anda belum diterima untuk offering {$classOffering->course->subject} (Lvl. {$classOffering->level}). Silakan coba offering lainnya.",
-                'href' => '/classoffering',
+                'user_id' => $application->teacher->user_id,
+                'type' => 'class_offering_accepted',
+                'title' => 'Selamat anda diterima!',
+                'text' => "Selamat, anda telah diterima untuk offering {$classOffering->course->subject} (Lvl. {$classOffering->level}). Silakan cek Class Management untuk detailnya.",
+                'href' => '/classmanagement',
                 'read' => false,
             ]);
 
-            $rejected->delete();
+            // Create class management dengan preferences yang dipilih teacher
+            $preferences = $classOffering->preferences ?? [];
+            $selectedPref = $preferences[$application->selected_preference] ?? null;
+
+            $classManagement = ClassManagement::create([
+                'course_id' => $classOffering->course_id,
+                'teacher_id' => $application->teacher_id,
+                'level' => $classOffering->level,
+                'period' => $classOffering->period,
+                'order' => $classOffering->order,
+                'type' => $classOffering->type,
+                'student' => $classOffering->student,
+                'schedule_at' => $classOffering->schedule_at,
+                'note' => $classOffering->note ?? '',
+                'session' => 0,
+                'status' => 'inactive',
+                'preferred_day' => $selectedPref['day'] ?? null, // Tambahkan field di migration
+                'preferred_time' => $selectedPref['time'] ?? null, // Tambahkan field di migration
+            ]);
+
+            // Archive offering
+            $classOffering->update(['is_archived' => true]);
+            });
+        } catch (ValidationException $e) {
+            return redirect()->route('classoffering')
+                ->with('error', collect($e->errors())->flatten()->first());
         }
-
-        // Kirim notifikasi ke teacher yang diterima
-        Notification::create([
-            'user_id' => $application->teacher->user_id,
-            'type' => 'class_offering_accepted',
-            'title' => 'Selamat anda diterima!',
-            'text' => "Selamat, anda telah diterima untuk offering {$classOffering->course->subject} (Lvl. {$classOffering->level}). Silakan cek Class Management untuk detailnya.",
-            'href' => '/classmanagement',
-            'read' => false,
-        ]);
-
-        // Create class management dengan preferences yang dipilih teacher
-        $preferences = $classOffering->preferences ?? [];
-        $selectedPref = $preferences[$application->selected_preference] ?? null;
-
-        $classManagement = ClassManagement::create([
-            'course_id' => $classOffering->course_id,
-            'teacher_id' => $application->teacher_id,
-            'level' => $classOffering->level,
-            'period' => $classOffering->period,
-            'order' => $classOffering->order,
-            'type' => $classOffering->type,
-            'student' => $classOffering->student,
-            'schedule_at' => $classOffering->schedule_at,
-            'note' => $classOffering->note ?? '',
-            'session' => 0,
-            'status' => 'inactive',
-            'preferred_day' => $selectedPref['day'] ?? null, // Tambahkan field di migration
-            'preferred_time' => $selectedPref['time'] ?? null, // Tambahkan field di migration
-        ]);
-
-        // Archive offering
-        $classOffering->update(['is_archived' => true]);
 
         return redirect()->route('classoffering')
             ->with('success', 'Teacher approved successfully. Class Management created.');

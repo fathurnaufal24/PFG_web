@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassManagement;
 use App\Models\ClassSchedule;
+use App\Models\ClassTypeSetting;
 use App\Models\Course;
 use App\Models\LessonPlan;
 use Carbon\Carbon;
@@ -130,13 +131,12 @@ class ClassManagementController extends Controller
             'note' => 'nullable|string',
             'teacher_id' => 'nullable|exists:teachers,id',
             'session' => 'nullable|integer|min:0',
-            'student' => 'nullable|integer|min:0',
         ]);
 
         $validated['status'] = 'inactive';
         $validated['order'] = $validated['order'] ?? 1;
         $validated['session'] = $validated['session'] ?? 0;
-        $validated['student'] = $validated['student'] ?? 0;
+        $validated['student'] = ClassTypeSetting::maxStudentFor($validated['type']);
         $validated['teacher_id'] = $user->role === 'teacher'
             ? $user->teacher->id
             : ($validated['teacher_id'] ?? null);
@@ -402,12 +402,14 @@ class ClassManagementController extends Controller
             'order' => 'required|integer|min:1',
             'type' => 'required|string|in:trial,regular,private',
             'session' => 'nullable|integer|min:0',
-            'student' => 'nullable|integer|min:0',
             'schedule_at' => 'nullable|date',
             'note' => 'nullable|string',
         ]);
 
         $validated['note'] = $validated['note'] ?? '';
+        if ($validated['type'] !== $classmanagement->type) {
+            $validated['student'] = ClassTypeSetting::maxStudentFor($validated['type']);
+        }
         $classmanagement->update($validated);
 
         return redirect()->route('classmanagement')

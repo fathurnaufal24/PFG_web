@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ParentMeetingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RevenueController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ClassOfferingController;
 use App\Models\ClassManagement;
 use App\Models\Teacher;
@@ -76,6 +77,8 @@ Route::middleware('auth')->group(function () {
         ->name('classmanagement.students.reject');
     Route::delete('/classmanagement/{classmanagement}/students/{student}', [ClassManagementController::class, 'removeStudent'])
         ->name('classmanagement.students.remove');
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
+    Route::put('/settings/class-types', [SettingController::class, 'updateClassTypes'])->name('settings.class-types');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/schedule', function () {
         return Inertia::render('Schedule/Index');
