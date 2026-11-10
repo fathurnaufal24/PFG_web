@@ -1,6 +1,6 @@
 # 07 · Testing
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Project memakai **Pest** (di atas PHPUnit). Konfigurasi ada di `phpunit.xml` dan `tests/Pest.php`.
 

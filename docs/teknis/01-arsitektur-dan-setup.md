@@ -1,6 +1,6 @@
 # 01 · Arsitektur & Setup
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 ## Teknologi
 
@@ -84,7 +84,10 @@ PFG_web/
 │   └── console.php               # Perintah artisan `inspire` (bawaan)
 ├── tests/                        # Test Pest
 ├── catatan.txt                   # Catatan pribadi (belum di-commit): "display chart: apexcharts.com"
-└── docs/                         # Dokumentasi ini
+└── docs/                         # Dokumentasi
+    ├── guidebook/                # Panduan pemakaian untuk pengguna
+    ├── teknis/                   # Dokumentasi teknis (folder ini)
+    └── CHANGELOG.md              # Log perubahan
 ```
 
 ## Menjalankan Project

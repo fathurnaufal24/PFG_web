@@ -1,6 +1,6 @@
 # 05 · Frontend (React + TypeScript)
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Semua kode frontend ada di `resources/js/`. Alias `@/` = `resources/js/` (diatur di `tsconfig.json`), jadi `@/Components/Sidebar` = `resources/js/Components/Sidebar.tsx`.
 

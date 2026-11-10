@@ -28,6 +28,34 @@ Tips: lihat daftar file yang berubah di commit terakhir dengan `git show --name-
 
 ---
 
+## 2026-11-10 — Pisah folder dokumentasi teknis & guidebook
+**Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
+
+Dokumentasi dipisah menjadi `docs/teknis/` (developer) dan `docs/guidebook/` (pengguna). Guidebook dipecah per kategori.
+
+**Ditambahkan**
+- `docs/guidebook/README.md` — daftar isi guidebook & cara membaca penanda
+- `docs/guidebook/01-istilah-dan-hak-akses.md`, `02-memulai.md`, `03-panduan-admin.md`, `04-panduan-guru.md`, `05-panduan-siswa.md`, `06-profil.md`, `07-ringkasan-alur.md`, `08-pesan-dan-solusi.md`, `09-fitur-dalam-pengembangan.md` — isi dari panduan lama, dipecah per kategori
+
+**Diubah**
+- `docs/01-…` s.d. `docs/08-…` → dipindah ke `docs/teknis/` (nama file tetap; link balik ke README disesuaikan)
+- `README.md` — struktur folder dokumentasi, daftar isi guidebook per file, link ke `docs/teknis/`, langkah merawat dokumentasi
+- `docs/teknis/01-arsitektur-dan-setup.md` — struktur folder `docs/`
+
+**Dihapus**
+- `docs/09-panduan-pengguna.md` — diganti folder `docs/guidebook/`
+
+## 2026-11-10 — Panduan pengguna (guidebook)
+**Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
+
+Menambahkan panduan pemakaian aplikasi untuk pengguna non-developer (admin, guru, siswa), dengan tautan ke dokumentasi teknis yang relevan.
+
+**Ditambahkan**
+- `docs/09-panduan-pengguna.md` — istilah, hak akses per peran, langkah tiap fitur beserta prasyaratnya, ringkasan alur, arti pesan yang muncul, fitur yang masih dalam pengembangan
+
+**Diubah**
+- `README.md` — tautan ke panduan pengguna; daftar isi dipisah menjadi "untuk pengguna" dan "untuk developer"
+
 ## 2026-11-10 — Dokumentasi project
 **Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
 

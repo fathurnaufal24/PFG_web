@@ -1,6 +1,6 @@
 # 06 · Alur Fitur
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Dokumen ini menjelaskan alur bisnis dari sudut pandang pengguna, lalu menunjuk file kode yang menjalankannya.
 

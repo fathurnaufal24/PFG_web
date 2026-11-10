@@ -1,6 +1,6 @@
 # 04 · Controller (Backend)
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Semua controller ada di `app/Http/Controllers/`. Untuk tiap method dijelaskan: siapa yang boleh akses, apa yang divalidasi, apa yang dilakukan ke database, dan apa yang dikembalikan.
 

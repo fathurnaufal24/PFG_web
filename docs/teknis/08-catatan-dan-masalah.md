@@ -1,8 +1,8 @@
 # 08 · Catatan & Masalah yang Perlu Dicek
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
-Daftar hal yang ditemukan saat membuat dokumentasi (per 2026-11-10). Belum ada yang diperbaiki; daftar ini untuk membantu menentukan pekerjaan berikutnya. Hapus item dari daftar setelah diperbaiki, dan catat perbaikannya di [CHANGELOG](CHANGELOG.md).
+Daftar hal yang ditemukan saat membuat dokumentasi (per 2026-11-10). Belum ada yang diperbaiki; daftar ini untuk membantu menentukan pekerjaan berikutnya. Hapus item dari daftar setelah diperbaiki, dan catat perbaikannya di [CHANGELOG](../CHANGELOG.md).
 
 ## A. Potensi Bug
 

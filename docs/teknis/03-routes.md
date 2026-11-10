@@ -1,6 +1,6 @@
 # 03 · Routes
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Semua URL aplikasi. Sumber: `routes/web.php` dan `routes/auth.php`.
 

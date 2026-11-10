@@ -1,6 +1,6 @@
 # 02 · Database & Model
 
-[← Kembali ke README](../README.md)
+[← Kembali ke README](../../README.md)
 
 Dokumen ini menjelaskan semua tabel (dari `database/migrations/`), model Eloquent (dari `app/Models/`), dan data dummy (seeder & factory).
 
