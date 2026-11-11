@@ -16,7 +16,7 @@ Struktur folder dokumentasi:
 docs/
 ├── guidebook/     # Panduan pemakaian aplikasi (untuk pengguna)
 ├── teknis/        # Dokumentasi teknis (untuk developer)
-└── CHANGELOG.md   # Log perubahan kode & dokumentasi
+└── CHANGELOG.md   # Riwayat fitur & perbaikan aplikasi
 ```
 
 ### Guidebook — untuk pengguna aplikasi (`docs/guidebook/`)
@@ -47,7 +47,8 @@ Mulai dari [daftar isi Guidebook](docs/guidebook/README.md).
 | 6 | [Alur Fitur](docs/teknis/06-alur-fitur.md) | Alur bisnis dari awal sampai akhir: role, class offering → class management → jadwal → lesson plan, notifikasi, settings |
 | 7 | [Testing](docs/teknis/07-testing.md) | Test yang ada dan cara menjalankannya |
 | 8 | [Catatan & Masalah](docs/teknis/08-catatan-dan-masalah.md) | Bagian yang masih dummy, kode yang tidak terpakai, dan potensi bug yang perlu dicek |
-| 9 | [CHANGELOG](docs/CHANGELOG.md) | Log perubahan: file apa yang ditambah, diubah, atau dihapus di setiap commit |
+| 9 | [Panduan Changelog](docs/teknis/09-panduan-changelog.md) | Aturan menulis entri changelog: label, format, template, contoh |
+| — | [CHANGELOG](docs/CHANGELOG.md) | Riwayat fitur dan perbaikan aplikasi, ditulis untuk pengguna |
 
 > **Mau cari file tertentu?** Lihat [Peta File](#peta-file-cepat) di bawah, lalu klik dokumen yang membahasnya.
 
@@ -137,7 +138,7 @@ Alur lengkap: [docs/teknis/06-alur-fitur.md](docs/teknis/06-alur-fitur.md).
 
 Setiap kali ada perubahan kode:
 
-1. Tambahkan entri baru di **paling atas** [docs/CHANGELOG.md](docs/CHANGELOG.md) (pakai format yang ada di file itu: *Ditambahkan / Diubah / Dihapus*).
+1. Tambahkan entri baru di **paling atas** [docs/CHANGELOG.md](docs/CHANGELOG.md), ikuti [Panduan Changelog](docs/teknis/09-panduan-changelog.md). Perubahan dokumentasi tidak perlu dicatat.
 2. Kalau perubahannya menyentuh tabel, route, controller, atau halaman, perbarui dokumen yang bersangkutan di `docs/teknis/`.
 3. Kalau perubahannya mengubah cara pemakaian (langkah, tombol, syarat, pesan yang tampil), perbarui juga file yang bersangkutan di `docs/guidebook/`.
 4. Kalau ada bug yang diperbaiki dan tercatat di [08-catatan-dan-masalah.md](docs/teknis/08-catatan-dan-masalah.md), hapus item tersebut dari daftar.

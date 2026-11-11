@@ -1,379 +1,139 @@
-# CHANGELOG — Log Perubahan
+# CHANGELOG — Riwayat Perubahan
 
 [← Kembali ke README](../README.md)
 
-Catatan semua perubahan kode: file apa yang **ditambahkan**, **diubah**, atau **dihapus**. Entri terbaru di paling atas.
+Daftar fitur dan perbaikan di PFG Portal. Perubahan terbaru ada di paling atas.
 
-## Cara Menambah Entri
+| Label | Artinya |
+|---|---|
+| ✨ **New** | Fitur atau halaman baru |
+| ⚡ **Improved** | Fitur lama jadi lebih baik |
+| 🔄 **Changed** | Cara kerja fitur berubah |
+| ✅ **Fixed** | Masalah yang sudah diperbaiki |
+| 🗑️ **Removed** | Fitur yang dihapus |
+| ⚠️ **Known Issue** | Masalah yang belum diperbaiki |
+| 🛠️ **Technical** | Catatan untuk developer |
 
-Salin template ini ke **bawah garis ini** (di atas entri terbaru), lalu isi:
-
-```markdown
-## YYYY-MM-DD — Judul singkat perubahan
-**Commit:** `abc1234` · **Oleh:** nama
-
-Ringkasan 1–2 kalimat: apa yang berubah dan kenapa.
-
-**Ditambahkan**
-- `path/file` — keterangan
-
-**Diubah**
-- `path/file` — keterangan
-
-**Dihapus**
-- `path/file` — keterangan
-```
-
-Tips: lihat daftar file yang berubah di commit terakhir dengan `git show --name-status HEAD`. Kode: `A` = ditambahkan, `M` = diubah, `D` = dihapus, `R` = di-rename.
+Tanda **(Admin)**, **(Teacher)**, atau **(Student)** menunjukkan peran yang terdampak. Tanpa tanda berarti berlaku untuk semua.
 
 ---
 
-## 2026-11-10 — Pisah folder dokumentasi teknis & guidebook
-**Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
+## 10 Oktober 2026 — Pengaturan kapasitas kelas
 
-Dokumentasi dipisah menjadi `docs/teknis/` (developer) dan `docs/guidebook/` (pengguna). Guidebook dipecah per kategori.
+- ✨ **New (Admin):** Halaman **Settings** untuk mengatur jumlah maksimal siswa per tipe kelas. Bawaannya: Trial 5, Regular 8, Private 1.
+- 🔄 **Changed (Admin):** Jumlah siswa saat membuat kelas atau penawaran kelas kini terisi otomatis dari Settings, tidak diisi manual lagi.
+- ✅ **Fixed:** Halaman Class Offering yang sebelumnya error.
+- 🛠️ **Technical:** Tabel baru `class_type_settings`, jalankan `php artisan migrate`.
+  File utama: `SettingController.php`, `ClassTypeSetting.php`, `Setting/Index.tsx`
 
-**Ditambahkan**
-- `docs/guidebook/README.md` — daftar isi guidebook & cara membaca penanda
-- `docs/guidebook/01-istilah-dan-hak-akses.md`, `02-memulai.md`, `03-panduan-admin.md`, `04-panduan-guru.md`, `05-panduan-siswa.md`, `06-profil.md`, `07-ringkasan-alur.md`, `08-pesan-dan-solusi.md`, `09-fitur-dalam-pengembangan.md` — isi dari panduan lama, dipecah per kategori
+## 7 Oktober 2026 — Dashboard siswa & kode kelas baru
 
-**Diubah**
-- `docs/01-…` s.d. `docs/08-…` → dipindah ke `docs/teknis/` (nama file tetap; link balik ke README disesuaikan)
-- `README.md` — struktur folder dokumentasi, daftar isi guidebook per file, link ke `docs/teknis/`, langkah merawat dokumentasi
-- `docs/teknis/01-arsitektur-dan-setup.md` — struktur folder `docs/`
+- ✨ **New (Student):** Dashboard dan menu samping khusus siswa.
+- 🔄 **Changed:** Kode kelas kini menunjukkan mata pelajaran, periode, dan urutan kelas (contoh: `EQD-3.1`), sehingga lebih mudah dikenali.
+- ⚠️ **Known Issue (Student):** Siswa belum bisa didaftarkan ke kelas.
+- 🛠️ **Technical:** Primary key `class_management` diganti dari angka menjadi string `{subject}-{period}.{order}`; foreign key di tabel terkait ikut diganti. Tabel baru `class_students`. Ditambahkan 3 akun dummy siswa di seeder. Route enroll dan manajemen siswa sudah ada, tapi method controller-nya belum dibuat.
+  File utama: `ClassManagement.php`, `ClassStudent.php`, `UserSeeder.php`
 
-**Dihapus**
-- `docs/09-panduan-pengguna.md` — diganti folder `docs/guidebook/`
+## 6 Oktober 2026 — Jendela konfirmasi di Class Offering
 
-## 2026-11-10 — Panduan pengguna (guidebook)
-**Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
+- ⚡ **Improved:** Konfirmasi approve, reject, delete, dan apply di Class Offering kini memakai jendela pop-up, bukan peringatan bawaan browser.
+- ✨ **New:** Pesan berhasil atau gagal muncul setelah sebuah aksi dijalankan.
 
-Menambahkan panduan pemakaian aplikasi untuk pengguna non-developer (admin, guru, siswa), dengan tautan ke dokumentasi teknis yang relevan.
+## 4 Oktober 2026 — Daftar sesi di detail kelas
 
-**Ditambahkan**
-- `docs/09-panduan-pengguna.md` — istilah, hak akses per peran, langkah tiap fitur beserta prasyaratnya, ringkasan alur, arti pesan yang muncul, fitur yang masih dalam pengembangan
+- 🔄 **Changed:** Daftar sesi di halaman detail kelas kini mengikuti jadwal kelas yang sudah diatur, bukan contoh tetap.
+- ⚡ **Improved:** Bagian-bagian di halaman detail kelas bisa dibuka-tutup dengan tampilan yang lebih jelas.
+- 🛠️ **Technical:** Laravel Debugbar ditambahkan untuk membantu debugging.
 
-**Diubah**
-- `README.md` — tautan ke panduan pengguna; daftar isi dipisah menjadi "untuk pengguna" dan "untuk developer"
+## 15 September 2026 — Pembaruan Class Management & pendaftaran akun
 
-## 2026-11-10 — Dokumentasi project
-**Commit:** (belum di-commit) · **Oleh:** Claude (atas permintaan arrijalifal)
+- 🔄 **Changed:** Akun baru yang dibuat lewat halaman Register otomatis berperan sebagai Student.
+- ⚡ **Improved:** Pembaruan tampilan dan data di halaman Class Management.
+- 🛠️ **Technical:** Ditambahkan 7 test untuk hak akses Class Management.
+  File utama: `ClassManagementAccessTest.php`
 
-Membuat dokumentasi lengkap project. README template Laravel diganti.
+## 29 Agustus 2026 — Perbaikan approval & Set Time
 
-**Ditambahkan**
-- `docs/01-arsitektur-dan-setup.md` — teknologi, struktur folder, cara menjalankan, konfigurasi
-- `docs/02-database-dan-model.md` — tabel, kolom, relasi, model, seeder, factory
-- `docs/03-routes.md` — daftar semua route
-- `docs/04-controller-backend.md` — penjelasan tiap controller & method
-- `docs/05-frontend.md` — halaman, layout, komponen, tipe TypeScript
-- `docs/06-alur-fitur.md` — alur bisnis per fitur
-- `docs/07-testing.md` — daftar test
-- `docs/08-catatan-dan-masalah.md` — potensi bug, fitur dummy, kode tidak terpakai
-- `docs/CHANGELOG.md` — file ini
+- ✅ **Fixed (Admin):** Proses approve guru di Class Offering.
+- ✅ **Fixed (Admin):** Pengaturan jadwal (Set Time) di Class Management.
 
-**Diubah**
-- `README.md` — template Laravel diganti menjadi halaman utama dokumentasi
+## 26 Agustus 2026 — Perbaikan Class Offering
 
----
+- ✅ **Fixed:** Error di halaman Class Offering.
+- 🛠️ **Technical:** Kolom preferensi waktu digabung ke migration utama; 2 migration tambahan dihapus. Perlu `php artisan migrate:fresh` jika database dibuat sebelum perubahan ini.
 
-## 2026-10-10 — Perbaikan Class Offering & halaman Settings
-**Commit:** `7364b04` · **Oleh:** arrijalifal
+## 25 Agustus 2026 — Preferensi waktu & jadwal kelas
 
-Kapasitas siswa per tipe kelas kini diatur admin lewat halaman Settings, bukan diisi manual.
+- ✨ **New (Admin):** Admin bisa memberi beberapa pilihan waktu mengajar di Class Offering.
+- ✨ **New (Teacher):** Guru memilih salah satu pilihan waktu saat melamar Class Offering.
+- ✨ **New (Admin):** Tombol **Set Time** untuk mengatur jadwal pertemuan kelas.
+- 🔄 **Changed (Teacher):** Lesson plan baru bisa dimulai setelah jadwal kelas diatur.
+- 🛠️ **Technical:** Tabel baru `class_schedules`.
 
-**Ditambahkan**
-- `app/Http/Controllers/SettingController.php` — halaman & simpan pengaturan
-- `app/Models/ClassTypeSetting.php` — model + `maxStudentFor()`
-- `database/migrations/2026_10_10_000000_create_class_type_settings_table.php` — tabel + data awal (trial 5, regular 8, private 1)
-- `resources/js/Pages/Setting/Index.tsx` — halaman Settings
+## 22 Agustus 2026 — Tampilan login baru & mulai pelajaran
 
-**Diubah**
-- `app/Http/Controllers/ClassManagementController.php`, `ClassOfferingController.php` — `student` diisi dari `ClassTypeSetting`
-- `resources/js/Components/Sidebar.tsx` — menu Settings untuk admin
-- `resources/js/Pages/ClassManagement/Index.tsx`, `ClassOffering/Index.tsx`
-- `routes/web.php` — route `/settings`, `/settings/class-types`
+- ✨ **New (Teacher):** Tombol **Start Lesson** di halaman Class Management untuk memulai lesson plan.
+- ⚡ **Improved:** Tampilan halaman Login dan Register didesain ulang.
+- ✅ **Fixed (Admin):** Form edit kelas yang tidak muncul.
+- ✅ **Fixed (Teacher):** Data di halaman profil guru yang gagal dimuat.
 
-## 2026-10-07 — ID kelas berdasarkan period & order
-**Commit:** `f660c44` · **Oleh:** arrijalifal
+## 20 Agustus 2026 — Halaman detail kelas
 
-Primary key `class_management` diganti dari angka menjadi teks `{subject}-{period}.{order}`.
+- ✨ **New:** Halaman detail kelas yang menampilkan tahapan kelas: lesson plan, kelas berjalan, laporan, dan parent meeting.
+- 🛠️ **Technical:** Tabel baru `lesson_plans`. Halaman `CourseShow.tsx` diganti `Show.tsx`.
 
-**Diubah**
-- `app/Models/ClassManagement.php` — event `creating` pembuat ID, key string
-- `database/migrations/2026_05_22_083151_create_class_management_table.php` — `id` jadi string primary
-- `database/migrations/2026_08_20_080845_create_lesson_plans_table.php`, `2026_08_23_115207_create_class_schedules_table.php`, `2026_10_06_165925_create_class_students_table.php` — foreign key ikut jadi string
-- `app/Http/Controllers/ClassManagementController.php`, `resources/js/Pages/ClassManagement/Index.tsx`, `Show.tsx` — format tampilan subject
+## 18 Agustus 2026 — Class Offering & notifikasi
 
-## 2026-10-07 — Akun dummy student
-**Commit:** `4220175` · **Oleh:** arrijalifal
+- ✨ **New (Admin):** Admin bisa membuka penawaran kelas (Class Offering) untuk guru.
+- ✨ **New (Teacher):** Guru bisa melamar penawaran kelas.
+- ✨ **New:** Tanda jumlah notifikasi yang belum dibaca di menu samping.
+- 🛠️ **Technical:** Tabel baru `class_offering_teacher`. Pengaturan trusted proxy dan HTTPS agar aplikasi bisa diakses lewat Tailscale Funnel.
 
-**Ditambahkan**
-- `app/Models/ClassStudent.php` — tabel penghubung siswa ↔ kelas
-- `database/migrations/2026_10_06_165925_create_class_students_table.php`
+## 13 Agustus 2026 — Tampilan halaman profil
 
-**Diubah**
-- `app/Models/ClassManagement.php`, `app/Models/Student.php` — relasi siswa ↔ kelas
-- `app/Http/Controllers/DashboardController.php`, `resources/js/Pages/Dashboard.tsx` — dashboard student
-- `database/seeders/UserSeeder.php` — 3 akun student
-- `resources/js/Components/Sidebar.tsx` — menu khusus student
-- `routes/web.php` — route enroll & manajemen siswa (method controller belum dibuat)
+- ⚡ **Improved:** Tata letak halaman edit profil diperbarui.
+- 🛠️ **Technical:** Perubahan konfigurasi database dan `allowScripts` di `package.json`.
 
-## 2026-10-06 — Ganti alert jadi modal di Class Offering
-**Commit:** `b90df18` · **Oleh:** arrijalifal
+## 6 Agustus 2026 — Edit kelas & tombol profil
 
-**Diubah**
-- `resources/js/Pages/ClassOffering/Index.tsx` — modal konfirmasi approve/reject/delete & apply
-- `resources/js/Pages/ClassManagement/Index.tsx`
-- `app/Http/Controllers/ClassManagementController.php`, `ClassOfferingController.php`
-- `app/Http/Middleware/HandleInertiaRequests.php` — flash `success`/`error`
-- `resources/js/types/index.d.ts` — tipe `flash`
+- ✨ **New (Admin):** Data kelas bisa diedit langsung di tiap baris tabel Class Management.
+- ⚡ **Improved (Admin):** Pilihan course saat membuat kelas kini berupa dropdown.
+- ✨ **New:** Tombol profil di menu samping.
 
-## 2026-10-04 — Sesi dinamis per kelas
-**Commit:** `01cafc2` · **Oleh:** arrijalifal
+## 3 Agustus 2026 — Class Management memakai data asli
 
-**Ditambahkan**
-- `storage/debugbar/.gitignore` — untuk Laravel Debugbar
+- 🔄 **Changed:** Halaman Class Management kini menampilkan data kelas yang tersimpan, bukan contoh.
+- 🔄 **Changed:** Dashboard dibedakan sesuai peran pengguna.
+- 🔄 **Changed (Teacher):** Guru hanya bisa melihat kelasnya sendiri.
 
-**Diubah**
-- `app/Http/Controllers/ClassManagementController.php` — daftar sesi di halaman detail dari `class_schedules`
-- `resources/js/Pages/ClassManagement/Show.tsx`
-- `composer.json`, `composer.lock`, `package-lock.json` — tambah debugbar
+## 30 Juli 2026 — Pembaruan sistem
 
-## 2026-09-15 — Update Class Management & test
-**Commit:** `df13651`, `67ca609` · **Oleh:** fathurnaufal24
+- 🛠️ **Technical:** Upgrade ke Laravel 13.
 
-**Ditambahkan**
-- `tests/Feature/ClassManagement/ClassManagementAccessTest.php` — 7 test Class Management
+## 4 Juni 2026 — Performa guru di dashboard
 
-**Diubah**
-- `app/Http/Controllers/ClassManagementController.php`, `resources/js/Pages/ClassManagement/Index.tsx`, `Show.tsx`
-- `app/Http/Controllers/Auth/AuthenticatedSessionController.php`, `RegisteredUserController.php` — register dengan role
-- `app/Models/Course.php`, `app/Models/Student.php`
-- `database/factories/ClassManagementFactory.php`, `CourseFactory.php`, `UserFactory.php`
-- `resources/js/Components/Sidebar.tsx`, `resources/js/Layouts/AuthenticatedLayout.tsx`
-- `routes/web.php`, `phpunit.xml`, `tests/Feature/Auth/RegistrationTest.php`
+- ✨ **New (Teacher):** Nilai performa guru tampil di dashboard.
+- 🛠️ **Technical:** Kolom baru `performance` di tabel `teachers`.
 
-## 2026-08-29 — Perbaikan approval offering & Set Time
-**Commit:** `58aa436` · **Oleh:** arrijalifal
+## 29 Mei 2026 — Logout
 
-**Diubah**
-- `app/Http/Controllers/ClassManagementController.php`, `ClassOfferingController.php`
-- Migration `class_management`, `class_offerings`, `class_offering_teacher`
+- ✨ **New:** Tombol logout di menu samping.
 
-## 2026-08-26 — Perbaikan error Class Offering
-**Commit:** `fd2d0b1` · **Oleh:** arrijalifal
+## 28 Mei 2026 — Halaman-halaman baru
 
-Kolom preferensi digabung langsung ke migration utama.
+- ✨ **New:** Halaman Class Offering, Module, Notification, Parent Meeting, Revenue, dan My Schedule.
+- ⚠️ **Known Issue:** Halaman Module, Parent Meeting, Revenue, dan My Schedule masih berisi data contoh.
 
-**Diubah**
-- `app/Http/Controllers/ClassOfferingController.php`, `resources/js/Pages/ClassOffering/Index.tsx`
-- Migration `class_management`, `class_offerings`, `class_offering_teacher` — tambah kolom preferensi
+## 22 Mei 2026 — Class Management & menu samping
 
-**Dihapus**
-- `database/migrations/2026_08_23_125430_add_preferences_to_class_offerings_and_class_offering_teacher.php`
-- `database/migrations/2026_08_23_125648_add_preferred_fields_to_class_management.php`
+- ✨ **New:** Halaman Class Management untuk melihat daftar kelas.
+- ✨ **New:** Menu samping (sidebar) untuk berpindah halaman.
 
-## 2026-08-25 — Preferensi waktu & jadwal kelas
-**Commit:** `ae0f019` · **Oleh:** arrijalifal
+## 19 Mei 2026 — Dashboard baru
 
-**Ditambahkan**
-- `app/Models/ClassSchedule.php`, `app/Http/Controllers/ClassScheduleController.php` (kosong)
-- `database/migrations/2026_08_23_115207_create_class_schedules_table.php`
-- 2 migration tambahan kolom preferensi (dihapus lagi di `fd2d0b1`)
+- ⚡ **Improved:** Tampilan dashboard didesain ulang.
 
-**Diubah**
-- `ClassManagementController.php` — `setTime`, `getSchedule`, `canStartLessonPlan`
-- `ClassOfferingController.php`, model `ClassManagement`, `ClassOffering`, `ClassOfferingTeacher`
-- `resources/js/Pages/ClassManagement/Index.tsx`, `ClassOffering/Index.tsx`, `routes/web.php`
+## 16 Mei 2026 — Versi pertama
 
-## 2026-08-22 — Perbaikan profil teacher
-**Commit:** `686223c` · **Oleh:** arrijalifal
-
-**Diubah**
-- `app/Http/Controllers/ProfileController.php`, `app/Http/Middleware/HandleInertiaRequests.php` — muat relasi sesuai role
-- `resources/js/Pages/Profile/Edit.tsx`
-
-## 2026-08-22 — Perbaikan edit kelas tidak muncul
-**Commit:** `211ee76` · **Oleh:** arrijalifal
-
-**Diubah**
-- `resources/js/Pages/ClassManagement/Index.tsx`
-
-## 2026-08-22 — Desain ulang Login & Register
-**Commit:** `ccfadc4` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `resources/js/Pages/Auth/background-halaman-login.jpg`
-
-**Diubah**
-- `resources/js/Pages/Auth/Login.tsx`, `Register.tsx`
-
-## 2026-08-22 — Tombol Start Lesson untuk teacher
-**Commit:** `b91cc4a` · **Oleh:** arrijalifal
-
-**Diubah**
-- `ClassManagementController.php` — `storeLessonPlan`
-- `app/Models/LessonPlan.php`, `resources/js/Pages/ClassManagement/Index.tsx`, `routes/web.php`
-
-## 2026-08-20 — Model Lesson Plan
-**Commit:** `d127599` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `app/Models/LessonPlan.php`, `app/Http/Controllers/LessonPlanController.php` (kosong)
-- `database/migrations/2026_08_20_080845_create_lesson_plans_table.php`
-- `resources/js/Pages/ClassManagement/Show.tsx` — halaman detail kelas
-
-**Diubah**
-- `app/Models/ClassManagement.php`, migration `class_management`, `UserSeeder.php`
-
-**Dihapus**
-- `resources/js/Pages/ClassManagement/CourseShow.tsx` — diganti `Show.tsx`
-
-## 2026-08-18 — Badge notifikasi untuk Class Offering
-**Commit:** `9280f1f` · **Oleh:** arrijalifal
-
-**Diubah**
-- `NotificationController.php`, `HandleInertiaRequests.php` — `unreadCount`
-- `Sidebar.tsx`, `ClassOffering/Index.tsx`, `Notification/Index.tsx`, `routes/web.php`
-
-## 2026-08-18 — Akses lewat Tailscale Funnel
-**Commit:** `bcf252e` · **Oleh:** arrijalifal
-
-**Diubah**
-- `bootstrap/app.php` — trusted proxy & host
-- `app/Providers/AppServiceProvider.php` — paksa HTTPS di belakang proxy
-- `resources/js/Pages/ClassManagement/CourseShow.tsx`, `resources/js/types/index.d.ts`
-
-## 2026-08-18 — Class Offering awal
-**Commit:** `fc270d4` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `app/Models/ClassOfferingTeacher.php`
-- `database/migrations/2026_08_15_073428_create_class_offering_teacher.php`
-
-**Diubah**
-- `ClassOfferingController.php`, `NotificationController.php`, model `ClassOffering`, `Notification`
-- Migration `class_offerings`, `notifications`
-- `resources/js/Pages/ClassOffering/Index.tsx`, `routes/web.php`
-
-## 2026-08-13 — Konfigurasi database & npm
-**Commit:** `001ab4c` · **Oleh:** arrijalifal
-
-**Diubah**
-- `config/database.php`, `package.json` (`allowScripts`), `package-lock.json`
-
-## 2026-08-13 — Layout halaman profil
-**Commit:** `99811c3` · **Oleh:** arrijalifal
-
-**Diubah**
-- `resources/js/Layouts/AuthenticatedLayout.tsx`, `resources/js/Pages/Profile/Edit.tsx`
-
-## 2026-08-06 — Edit kelas, dropdown course, tombol profil
-**Commit:** `a5ef48e`, `989f0c2`, `1489de3` · **Oleh:** arrijalifal
-
-**Diubah**
-- `ClassManagementController.php`, `ClassManagement/Index.tsx` — dropdown course & edit per baris
-- `UserSeeder.php`
-- `Sidebar.tsx` — tombol profil
-
-## 2026-08-03 — Class Management terhubung ke database
-**Commit:** `b129f77`, `14a6d78`, `82f8944` · **Oleh:** arrijalifal
-
-Data kelas diambil dari database, dashboard dipisah per role, teacher hanya melihat kelasnya sendiri.
-
-**Ditambahkan**
-- `database/seeders/ClassManagementSeeder.php`
-
-**Diubah**
-- `ClassManagementController.php`, `app/Models/ClassManagement.php`
-- Migration `curricula`, `class_management`
-- `UserSeeder.php`, `ClassManagement/Index.tsx`, `routes/web.php`
-- `DashboardController.php`, `Dashboard.tsx`
-
-## 2026-07-30 — Upgrade ke Laravel 13
-**Commit:** `475e36d` · **Oleh:** arrijalifal
-
-**Diubah**
-- `composer.json`, `composer.lock`
-
-## 2026-06-04 — Kolom performance teacher
-**Commit:** `3d14a83` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `app/Http/Controllers/DashboardController.php`
-
-**Diubah**
-- `app/Models/Teacher.php`, migration `teachers` — kolom `performance`
-- `UserSeeder.php`, `Dashboard.tsx`, `resources/js/types/index.d.ts`, `routes/web.php`
-
-## 2026-05-29 — Logout
-**Commit:** `8bd6d69` · **Oleh:** arrijalifal
-
-**Diubah**
-- `resources/js/Components/Sidebar.tsx` — tombol logout
-
-## 2026-05-28 — Halaman-halaman baru (konversi JS ke TSX)
-**Commit:** `4da8dfe` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- Controller: `ClassOfferingController`, `ModuleController`, `NotificationController`, `ParentMeetingController`
-- Model + factory: `ClassOffering`, `Module`, `Notification`, `ParentMeeting`
-- Migration: `modules`, `class_offerings`, `notifications`, `parent_meetings`
-- Halaman: `ClassOffering/Index.tsx`, `Module/Index.tsx`, `Notification/Index.tsx`, `ParentMeeting/Index.tsx`, `Revenue/Index.tsx`, `Schedule/Index.tsx`
-
-**Diubah**
-- `RevenueController.php`, `routes/web.php`
-
-**Dihapus**
-- `ClassOffering/ClassOffering.tsx`, `Module/ModuleIndex.tsx`, `Revenue/RevenueIndex.tsx`, `Schedule/ScheduleIndex.tsx` — diganti versi `Index.tsx`
-
-## 2026-05-22 — Integrasi React & Class Management
-**Commit:** `8476441`, `6af1db4` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `app/Http/Controllers/AvailableCourseController.php`, `ClassManagementController.php`
-- `app/Models/ClassManagement.php`, `database/factories/ClassManagementFactory.php`
-- `database/migrations/2026_05_22_083151_create_class_management_table.php`
-- `resources/js/Components/Sidebar.tsx`, `public/images/logo-sidebar.png`
-- `resources/js/Pages/ClassManagement/Index.tsx`
-
-**Diubah**
-- `app/Models/Teacher.php`, `AuthenticatedLayout.tsx`, `WelcomeLayout.tsx`, `Dashboard.tsx`, `routes/web.php`
-- `Course/CourseShow.tsx` → `ClassManagement/CourseShow.tsx` (rename)
-- `Course/SetTeacherId.tsx` → `ClassManagement/SetTeacherId.tsx` (rename)
-
-**Dihapus**
-- `resources/js/Layouts/AuthenticatedLayout.tsx copy.backup`
-- `resources/js/Pages/Course/CourseDashboard.tsx`
-
-## 2026-05-19 — Dashboard baru & seeder
-**Commit:** `c0adf3d`, `be22d53`, `b145e06`, `f2264ad`, `7d4a8a9` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `public/images/icon-guru.png`
-
-**Diubah**
-- `CourseSeeder.php`, `UserSeeder.php`, `DatabaseSeeder.php` — hapus kolom `subject` lama di seeder
-- `resources/js/Pages/Dashboard.tsx`, `resources/js/types/vite-env.d.ts`, `.gitignore`
-
-## 2026-05-18 — Model AvailableCourse
-**Commit:** `6d07264` · **Oleh:** arrijalifal
-
-**Ditambahkan**
-- `app/Models/AvailableCourse.php`, `database/factories/AvailableCourseFactory.php`
-- `database/migrations/2026_05_17_125144_create_available_courses_table.php`
-
-**Diubah**
-- `app/Models/Course.php`, `app/Models/Teacher.php`, migration `courses`
-
-## 2026-05-17 — teacher_id nullable di course
-**Commit:** `6f75a49` · **Oleh:** arrijalifal
-
-**Diubah**
-- Migration `courses`, `.gitignore`, `package.json`, `package-lock.json`
-
-## 2026-05-16 — Commit pertama
-**Commit:** `973ad50` · **Oleh:** arrijalifal
-
-Kerangka awal dari Laravel + Breeze (React/TypeScript) plus model & migration awal: `students`, `teachers`, `courses`, `books`, `mood_trackers`, `course_meetings`, `attendances`, `curricula`, `course_interests`, `revenues`. Halaman awal: `Welcome`, `Dashboard`, Auth, Profile, `Course/*`, `ClassOffering/ClassOffering.tsx`, `Module/ModuleIndex.tsx`, `Revenue/RevenueIndex.tsx`, `Schedule/ScheduleIndex.tsx`. Komponen `ArticleCards`, `PricingCards`, `TestimonialCards`, layout `WelcomeLayout`. Gambar logo & homescreen di `public/images/`.
+- ✨ **New:** Halaman depan, login, register, lupa kata sandi, dan edit profil.
+- 🛠️ **Technical:** Dibangun dengan Laravel + Breeze (React/TypeScript). Tabel awal: `students`, `teachers`, `courses`, `books`, `mood_trackers`, `course_meetings`, `attendances`, `curricula`, `course_interests`, `revenues`. Perubahan 17–18 Mei (kolom `teacher_id` nullable, model `AvailableCourse`) juga termasuk di sini.
