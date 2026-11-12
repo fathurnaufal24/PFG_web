@@ -14,7 +14,7 @@ const Module = () => {
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-8 bg-[#F3F4F9] min-h-screen">
+            <div className="flex-1 p-8 bg-page min-h-screen">
                 <h2 className="text-2xl font-bold mb-8 text-gray-800">Module Curriculum</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

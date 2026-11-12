@@ -85,7 +85,7 @@ const Notifications = ({ notifications, unreadCount }: Props) => {
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-6 md:p-8 bg-[#F3F4F9] min-h-screen">
+            <div className="flex-1 p-6 md:p-8 bg-page min-h-screen">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">

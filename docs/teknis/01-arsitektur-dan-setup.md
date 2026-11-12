@@ -69,7 +69,7 @@ PFG_web/
 │   ├── images/                   # Logo & gambar statis
 │   └── build/                    # Hasil `npm run build` (di-ignore git)
 ├── resources/
-│   ├── css/app.css               # Hanya import Tailwind
+│   ├── css/app.css               # Import Tailwind + gaya dasar tema (body, input)
 │   ├── js/
 │   │   ├── app.tsx               # Titik awal React/Inertia
 │   │   ├── bootstrap.ts          # Setup axios

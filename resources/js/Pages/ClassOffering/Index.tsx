@@ -400,7 +400,7 @@ const ClassOfferingIndex = ({
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-6 md:p-8 bg-[#F3F4F9] min-h-screen">
+            <div className="flex-1 p-6 md:p-8 bg-page min-h-screen">
                 <div className="max-w-7xl mx-auto">
                     {/* Flash Message Banner */}
                     {flash?.success && flashVisible && (

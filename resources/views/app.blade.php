@@ -6,6 +6,14 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Terapkan tema tersimpan sebelum render agar tidak berkedip -->
+        <script>
+            try {
+                var t = localStorage.getItem('theme');
+                if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        </script>
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

@@ -288,7 +288,7 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
                                 {classData.type}
                             </span>
                             {classEnded && (
-                                <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-white">
+                                <span className="theme-light rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-white">
                                     Class Ended
                                 </span>
                             )}
@@ -666,7 +666,7 @@ export default function ClassManagementShow({ classData, userRole }: Props) {
                                                     <button
                                                         type="button"
                                                         onClick={() => setClassEnded(true)}
-                                                        className="rounded-xl bg-slate-900 px-6 py-2 font-bold text-white hover:bg-slate-800"
+                                                        className="theme-light rounded-xl bg-slate-900 px-6 py-2 font-bold text-white hover:bg-slate-800"
                                                     >
                                                         Class Ends
                                                     </button>

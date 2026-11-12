@@ -233,7 +233,7 @@ const Dashboard = ({ teacherData, studentData, stats, isAdmin, userRole, userNam
     if (isAdmin || userRole === 'admin') {
         return (
             <AuthenticatedLayout>
-                <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
+                <div className="flex-1 p-6 bg-page min-h-screen font-sans">
                     {/* Admin Dashboard */}
                     <div className="bg-white p-8 rounded-3xl shadow-sm mb-6">
                         <h1 className="text-3xl font-bold text-gray-800 mb-4">
@@ -269,7 +269,7 @@ const Dashboard = ({ teacherData, studentData, stats, isAdmin, userRole, userNam
     if (!teacherData) {
         return (
             <AuthenticatedLayout>
-                <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
+                <div className="flex-1 p-6 bg-page min-h-screen font-sans">
                     <div className="bg-white p-8 rounded-3xl shadow-sm">
                         <p className="text-gray-600">Loading teacher data...</p>
                     </div>
@@ -280,7 +280,7 @@ const Dashboard = ({ teacherData, studentData, stats, isAdmin, userRole, userNam
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-6 bg-[#F3F4F9] min-h-screen font-sans">
+            <div className="flex-1 p-6 bg-page min-h-screen font-sans">
 
                 {/* HEADER SECTION */}
                 <div className="flex flex-col lg:flex-row gap-4 mb-6">

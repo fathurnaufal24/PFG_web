@@ -38,7 +38,7 @@ export default function PricingCard({ title, subtitle, originalPrice, price, dis
                 <p className="text-[#cc9945] text-sm font-bold mt-2">+2 bulan gratis</p>
             </div>
 
-            <button className={`w-full py-3 rounded-lg font-bold border ${isPopular ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-400 hover:bg-gray-50'}`}>
+            <button className={`theme-light w-full py-3 rounded-lg font-bold border ${isPopular ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-400 hover:bg-gray-50'}`}>
                 Pilih paket
             </button>
 

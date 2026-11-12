@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import ThemeToggle from './ThemeToggle';
 
 const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;}) => {
   // Ambil data user dari Inertia
@@ -86,7 +87,7 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
         ></div>
       )}
 
-      <aside className={`
+      <aside className={`theme-light 
         fixed md:static inset-y-0 left-0 z-50
         w-72 shrink-0 h-screen shadow-2xl border-r border-slate-700/60
         bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950
@@ -161,6 +162,8 @@ const Sidebar = ({ isOpen, setIsOpen }: {isOpen: boolean; setIsOpen: React.Dispa
             );
           })}
         </nav>
+
+        <ThemeToggle className="mt-4" />
 
         <Link
           href='/logout'

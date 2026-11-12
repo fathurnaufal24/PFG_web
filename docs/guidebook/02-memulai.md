@@ -6,6 +6,14 @@ Mendaftar, masuk, lupa kata sandi, keluar, serta mengenal menu samping, notifika
 
 ---
 
+## Tema Terang dan Gelap
+
+Ada tiga pilihan tema pada kontrol **Sistem / Terang / Gelap** di bagian bawah menu samping (pada halaman lupa/reset kata sandi, di bawah kotak form):\n\n| Pilihan | Hasil |\n|---|---|\n| Sistem (bawaan) | Mengikuti tema OS/browser Anda secara otomatis |\n| Terang | Selalu tampil terang |\n| Gelap | Selalu tampil gelap |\n\nPilihan tersimpan di browser yang Anda pakai. Menu samping dan halaman depan selalu tampil dengan warna aslinya.
+
+📘 Detail teknis: [Tema Terang/Gelap](../teknis/05-frontend.md#tema-teranggelap)
+
+---
+
 ## Memulai: Akun, Masuk, dan Keluar
 
 ### Membuka aplikasi

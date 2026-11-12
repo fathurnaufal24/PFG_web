@@ -119,7 +119,7 @@ export default function Edit({
     return (
         <AuthenticatedLayout>
             <Head title="Profile" />
-            <div className="flex-1 w-full p-6 md:p-8 bg-[#F3F4F9]">
+            <div className="flex-1 w-full p-6 md:p-8 bg-page">
                 <div className="w-full">
                     {/* Header */}
                     <div className="flex justify-between items-center mb-8">

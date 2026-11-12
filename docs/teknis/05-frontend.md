@@ -49,6 +49,16 @@ Bawaan Breeze, kotak putih di tengah dengan logo. Dipakai halaman auth bawaan (F
 
 ---
 
+## Tema Terang/Gelap
+
+Ada 3 mode: **Sistem** (default, mengikuti `prefers-color-scheme` OS), **Terang**, dan **Gelap**. Pilihan dibuat lewat komponen `ThemeToggle` (di Sidebar dan `GuestLayout`; halaman Login, Register, dan Welcome tidak memakainya) dan disimpan di `localStorage` kunci `theme` (mode Sistem = kunci dihapus). Mode dipasang sebagai atribut `data-theme` pada `<html>`; skrip kecil di `app.blade.php` memasangnya sebelum render agar tidak berkedip.
+
+- `tailwind.config.js`: palet `gray`, `slate`, warna `bg-white`, dan `bg-page` dibaca dari CSS variable (`--gray-50`, `--c-white`, dst.). Plugin `addBase` membuat nilai terang di `:root`, skala yang dibalik di `@media (prefers-color-scheme: dark)` (hanya bila `data-theme` bukan `light`), dan di `:root[data-theme="dark"]`. Karena itu kelas biasa seperti `bg-white`, `text-gray-700`, `border-slate-200` otomatis berganti tema; **tidak perlu menulis varian `dark:`** (semua `dark:` bawaan Breeze sudah dihapus agar tidak bentrok).
+- `text-white` dan warna berwarna (emerald, indigo, red, dst.) tidak berubah di mode gelap.
+- Kelas `theme-light` mengembalikan variable ke nilai terang pada elemen itu beserta isinya. Dipakai untuk area yang memang gelap/berdesain tetap: Sidebar, header mobile, `PrimaryButton`, badge gelap di `ClassManagement/Show.tsx`, tombol di `PricingCards`, dan seluruh `WelcomeLayout` (halaman depan).
+- `bg-page` menggantikan warna latar halaman `#F3F4F9`.
+- `resources/css/app.css`: `body` memakai `bg-white text-gray-900`, dan input/select/textarea ditimpa agar latarnya ikut tema (default `@tailwindcss/forms` selalu putih).
+
 ## Components
 
 Folder `Components/`.
@@ -58,6 +68,7 @@ Folder `Components/`.
 | File | Fungsi | Props |
 |------|--------|-------|
 | `Sidebar.tsx` | Menu navigasi kiri | `isOpen`, `setIsOpen` |
+| `ThemeToggle.tsx` | Pilihan tema Sistem/Terang/Gelap | `className?` |
 | `ArticleCards.tsx` | Kartu artikel di halaman Welcome | lihat `ArticleProps` di file |
 | `PricingCards.tsx` | Kartu harga paket di halaman Welcome | lihat `PricingProps` |
 | `TestimonialCards.tsx` | Kartu testimoni di halaman Welcome | lihat `TestimonialProps` |

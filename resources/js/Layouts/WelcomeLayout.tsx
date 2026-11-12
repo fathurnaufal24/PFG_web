@@ -9,7 +9,7 @@ import { PageProps } from '@/types';
 // after:
 export default function WelcomeLayout({ auth, children }: PageProps<{ children?: ReactNode }>) {
     return (
-        <div className=" min-h-screen bg-white font-sans overflow-x-hidden">
+        <div className="theme-light min-h-screen bg-white font-sans overflow-x-hidden">
             {/* Navbar */}
             <nav className="w-full bg-[#064e7b] px-8 py-5 flex items-center justify-between">
                 {/* Area Logo (Kosong di desain, tapi disiapkan ruangnya) */}

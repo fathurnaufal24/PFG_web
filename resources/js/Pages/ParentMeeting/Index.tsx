@@ -10,7 +10,7 @@ const ParentMeeting = () => {
 
     return (
         <AuthenticatedLayout>
-            <div className="flex-1 p-8 bg-[#F3F4F9] min-h-screen">
+            <div className="flex-1 p-8 bg-page min-h-screen">
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-3">
                         <Users className="text-emerald-600" size={28} />

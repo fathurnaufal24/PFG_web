@@ -18,6 +18,14 @@ Tanda **(Admin)**, **(Teacher)**, atau **(Student)** menunjukkan peran yang terd
 
 ---
 
+## 12 November 2026 — Tema gelap & terang
+
+- ✨ **New:** Tema gelap dan terang. Secara bawaan tampilan mengikuti tema perangkat (OS/browser), dan Anda bisa memilih sendiri **Sistem**, **Terang**, atau **Gelap** lewat pilihan tema di menu samping (dan di halaman lupa/reset kata sandi). Pilihan diingat di browser.
+- 🔄 **Changed:** Menu samping, tombol utama, dan halaman depan (landing page) tetap berwarna seperti semula di kedua tema.
+- ⚠️ **Known Issue:** Label berwarna (badge hijau, merah, biru, dst.) tetap terang di mode gelap.
+- 🛠️ **Technical:** Palet warna kini memakai CSS variable; varian `dark:` tidak dipakai lagi.
+  File utama: tailwind.config.js, ThemeToggle.tsx, app.css
+
 ## 10 Oktober 2026 — Pengaturan kapasitas kelas
 
 - ✨ **New (Admin):** Halaman **Settings** untuk mengatur jumlah maksimal siswa per tipe kelas. Bawaannya: Trial 5, Regular 8, Private 1.
